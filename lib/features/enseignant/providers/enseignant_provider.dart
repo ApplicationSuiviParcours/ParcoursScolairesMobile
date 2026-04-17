@@ -7,12 +7,12 @@ class EnseignantProvider extends ChangeNotifier {
 
   bool _isLoading = false;
   Map<String, dynamic>? _stats;
-  List<dynamic> _classes = [];
+  List<dynamic> _assignments = [];
   String? _error;
 
   bool get isLoading => _isLoading;
   Map<String, dynamic>? get stats => _stats;
-  List<dynamic> get classes => _classes;
+  List<dynamic> get assignments => _assignments;
   String? get error => _error;
 
   Future<void> loadDashboard() async {
@@ -22,7 +22,7 @@ class EnseignantProvider extends ChangeNotifier {
     try {
       final response = await _enseignantService.getDashboardData();
       _stats = response['stats'];
-      _classes = response['classes'] ?? [];
+      _assignments = response['assignments'] ?? [];
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -85,6 +85,14 @@ class EnseignantProvider extends ChangeNotifier {
       await _enseignantService.dioClient.dio.post('/enseignant/absences', data: data);
     } catch (e) {
       throw Exception('Erreur lors de l\'enregistrement des absences');
+    }
+  }
+
+  Future<void> createEvaluation(Map<String, dynamic> data) async {
+    try {
+      await _enseignantService.dioClient.dio.post('/enseignant/evaluations', data: data);
+    } catch (e) {
+      throw Exception('Erreur lors de la création de l\'évaluation');
     }
   }
 }

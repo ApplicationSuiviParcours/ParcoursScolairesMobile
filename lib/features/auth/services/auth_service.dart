@@ -7,14 +7,15 @@ class AuthService {
 
   AuthService(this._dioClient);
 
-  Future<Map<String, dynamic>> login(String credential, String password, {String role = 'user'}) async {
+  Future<Map<String, dynamic>> login(String credential, String password, {String role = 'user', bool remember = false}) async {
     try {
       final response = await _dioClient.dio.post(
         ApiConstants.login,
         data: {
           'credential': credential,
-          'password': password,
+          if (password.isNotEmpty) 'password': password,
           'role': role,
+          'remember': remember,
         },
       );
       

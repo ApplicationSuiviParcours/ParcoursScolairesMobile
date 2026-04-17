@@ -11,6 +11,7 @@ class AuthProvider extends ChangeNotifier {
   AuthState _status = AuthState.initial;
   Map<String, dynamic>? _user;
   String? _role;
+  String? _savedMatricule;
 
   AuthProvider(this._authService) {
     _checkAuthStatus();
@@ -19,10 +20,12 @@ class AuthProvider extends ChangeNotifier {
   AuthState get status => _status;
   Map<String, dynamic>? get user => _user;
   String? get role => _role;
+  String? get savedMatricule => _savedMatricule;
 
   Future<void> _checkAuthStatus() async {
     final token = await _secureStorage.read(key: 'auth_token');
     final savedRole = await _secureStorage.read(key: 'user_role');
+    _savedMatricule = await _secureStorage.read(key: 'saved_matricule');
     
     if (token != null && savedRole != null) {
       _role = savedRole;
@@ -41,12 +44,12 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> login(String credential, String password, {String role = 'user'}) async {
+  Future<bool> login(String credential, String password, {String role = 'user', bool remember = false}) async {
     _status = AuthState.authenticating;
     notifyListeners();
 
     try {
-      final data = await _authService.login(credential, password, role: role);
+      final data = await _authService.login(credential, password, role: role, remember: remember);
       
       final token = data['token'];
       _user = data['user'];
@@ -60,6 +63,14 @@ class AuthProvider extends ChangeNotifier {
 
       await _secureStorage.write(key: 'auth_token', value: token);
       await _secureStorage.write(key: 'user_role', value: _role);
+
+      if (remember) {
+        await _secureStorage.write(key: 'saved_matricule', value: credential);
+        _savedMatricule = credential;
+      } else {
+        await _secureStorage.delete(key: 'saved_matricule');
+        _savedMatricule = null;
+      }
 
       _status = AuthState.authenticated;
       notifyListeners();

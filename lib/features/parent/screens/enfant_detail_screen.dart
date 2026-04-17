@@ -91,7 +91,7 @@ class EnfantDetailScreen extends StatelessWidget {
 
           // Stats Grid (Mirroring Eleve Dashboard)
           SliverPadding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             sliver: SliverToBoxAdapter(
               child: GridView.count(
                 shrinkWrap: true,
@@ -113,7 +113,7 @@ class EnfantDetailScreen extends StatelessWidget {
                     value: '${stats?['total_absences'] ?? '0'}',
                     icon: Icons.warning_amber_rounded,
                     color: Colors.orange,
-                    subtitle: stats?['absences_non_justifiees'] > 0 ? '${stats?['absences_non_justifiees']} non justif.' : null,
+                    subtitle: (stats?['absences_non_justifiees'] ?? 0) > 0 ? '${stats?['absences_non_justifiees']} non justif.' : null,
                   ),
                   StatCard(
                     title: 'Évaluations',
@@ -123,7 +123,7 @@ class EnfantDetailScreen extends StatelessWidget {
                   ),
                   StatCard(
                     title: 'Bulletins',
-                    value: enfant['dernier_bulletin'] != null ? 'Disponible' : 'N/A',
+                    value: stats?['dernier_bulletin'] != null ? 'Disponible' : 'Aucun',
                     icon: Icons.description_outlined,
                     color: Colors.blue,
                   ),
@@ -132,10 +132,131 @@ class EnfantDetailScreen extends StatelessWidget {
             ),
           ),
 
+          // Performance par Matière (New)
+          if (stats?['moyennes_par_matiere'] != null && (stats['moyennes_par_matiere'] as List).isNotEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Performance par Matière',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                        ],
+                      ),
+                      child: Column(
+                        children: (stats?['moyennes_par_matiere'] as List).take(5).map<Widget>((m) {
+                          final double moyenne = (m['moyenne'] as num).toDouble();
+                          final color = moyenne >= 14 ? Colors.green : (moyenne >= 10 ? Colors.orange : Colors.red);
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(m['nom'], style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                                    Text('$moyenne/20', style: TextStyle(fontWeight: FontWeight.bold, color: color)),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: moyenne / 20,
+                                    backgroundColor: color.withValues(alpha: 0.1),
+                                    valueColor: AlwaysStoppedAnimation<Color>(color),
+                                    minHeight: 6,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          // Dernier Bulletin (New)
+          if (stats?['dernier_bulletin'] != null)
+             SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Dernier Bulletin',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF0F172A), Color(0xFF334155)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  stats?['dernier_bulletin']?['periode']?.toUpperCase() ?? '',
+                                  style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Moyenne: ${stats?['dernier_bulletin']?['moyenne']}/20',
+                                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Rang: ${stats?['dernier_bulletin']?['rang'] ?? '-'}',
+                                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.workspace_premium_rounded, color: Colors.amber, size: 32),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
           // Recent Activity Header
           const SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
+              padding: EdgeInsets.fromLTRB(24, 32, 24, 16),
               child: Text(
                 'Dernières Notes',
                 style: TextStyle(
@@ -149,7 +270,7 @@ class EnfantDetailScreen extends StatelessWidget {
 
           // Recent Activities List
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 100),
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
@@ -196,7 +317,7 @@ class EnfantDetailScreen extends StatelessWidget {
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                               ),
                               Text(
-                                note['evaluation']?['nom'] ?? 'Contrôle',
+                                '${note['evaluation']?['nom'] ?? 'Contrôle'} - ${note['evaluation']?['date_evaluation'] ?? ''}',
                                 style: const TextStyle(color: Colors.black54, fontSize: 12),
                               ),
                             ],

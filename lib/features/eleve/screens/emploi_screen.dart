@@ -17,7 +17,10 @@ class _EmploiScreenState extends State<EmploiScreen> with SingleTickerProviderSt
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
-    Future.microtask(() => context.read<EleveProvider>().loadEmploi());
+    Future.microtask(() {
+      if (!mounted) return;
+      context.read<EleveProvider>().loadEmploi();
+    });
   }
 
   @override

@@ -13,7 +13,10 @@ class _BulletinsScreenState extends State<BulletinsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<EleveProvider>().loadBulletins());
+    Future.microtask(() {
+      if (!mounted) return;
+      context.read<EleveProvider>().loadBulletins();
+    });
   }
 
   @override

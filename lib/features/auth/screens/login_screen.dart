@@ -12,7 +12,18 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _credentialController = TextEditingController();
+  bool _rememberMe = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    final savedMatricule = context.read<AuthProvider>().savedMatricule;
+    if (savedMatricule != null) {
+      _credentialController.text = savedMatricule;
+      _rememberMe = true;
+    }
+  }
 
   @override
   void dispose() {
@@ -37,6 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _credentialController.text.trim(),
         '', // Pas de mot de passe pour les élèves/parents/profs
         role: 'user', 
+        remember: _rememberMe,
       );
     } catch (e) {
       if (mounted) {
@@ -51,7 +63,6 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final authStatus = context.watch<AuthProvider>().status;
     final isLoading = authStatus == AuthState.authenticating;
-    final theme = Theme.of(context);
 
     return Scaffold(
       body: Container(
@@ -81,25 +92,25 @@ class _LoginScreenState extends State<LoginScreen> {
                         // Icon Header
                         Center(
                           child: Container(
-                            width: 70,
-                            height: 70,
+                            width: 90,
+                            height: 90,
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
-                              ),
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 8),
+                                  color: Colors.black.withValues(alpha: 0.08),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
                                 )
                               ],
                             ),
-                            child: const Icon(
-                              Icons.school_rounded,
-                              color: Colors.white,
-                              size: 35,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Image.asset(
+                                'assets/images/logo.png',
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
                         ),
@@ -176,6 +187,41 @@ class _LoginScreenState extends State<LoginScreen> {
                             }
                             return null;
                           },
+                        ),
+                        // Remember Me Checkbox
+                        Row(
+                          children: [
+                            SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: Checkbox(
+                                value: _rememberMe,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _rememberMe = value ?? false;
+                                  });
+                                },
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                activeColor: const Color(0xFF4F46E5),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _rememberMe = !_rememberMe;
+                                });
+                              },
+                              child: const Text(
+                                'Se souvenir de moi',
+                                style: TextStyle(
+                                  color: Color(0xFF475569),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 32),
 

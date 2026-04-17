@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:gestparc/features/auth/providers/auth_provider.dart';
 import 'package:gestparc/features/parent/providers/parent_provider.dart';
-import 'package:gestparc/shared/widgets/stat_card.dart';
 import 'package:go_router/go_router.dart';
+import 'package:gestparc/shared/widgets/app_drawer.dart';
 
 class ParentDashboardScreen extends StatefulWidget {
   const ParentDashboardScreen({super.key});
@@ -13,10 +13,15 @@ class ParentDashboardScreen extends StatefulWidget {
 }
 
 class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<ParentProvider>().loadDashboard());
+    Future.microtask(() {
+      if (!mounted) return;
+      context.read<ParentProvider>().loadDashboard();
+    });
   }
 
   @override
@@ -24,75 +29,96 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     final user = context.watch<AuthProvider>().user;
     final parentProvider = context.watch<ParentProvider>();
     final statsGlobal = parentProvider.statsGlobal;
+    final photoUrl = user?['photo_url'];
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: const Color(0xFFF8FAFC),
+      drawer: const AppDrawer(),
       body: CustomScrollView(
         slivers: [
-          // Header Mirroring Web Gradient (Parent Theme: Deep Purple/Indigo)
-          SliverToBoxAdapter(
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 60, 24, 32),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF312E81), Color(0xFF4338CA), Color(0xFF6366F1)],
-                ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(40),
-                  bottomRight: Radius.circular(40),
+          // Professional AppBar + Header
+          SliverAppBar(
+            expandedHeight: 180,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: const Color(0xFF059669),
+            leading: IconButton(
+              icon: const Icon(Icons.menu_rounded, color: Colors.white),
+              onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+            ),
+            actions: [
+              Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_none_rounded, color: Colors.white),
+                    onPressed: () => context.push('/notifications'),
+                  ),
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                      constraints: const BoxConstraints(minWidth: 8, minHeight: 8),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => context.push('/profile'),
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.white24,
+                    backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+                    child: photoUrl == null ? const Icon(Icons.person, size: 16, color: Colors.white) : null,
+                  ),
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF059669), Color(0xFF10B981)],
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 100, 24, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Espace Parent',
+                        style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Bonjour, ${user?['name']?.split(' ')[0] ?? 'Parent'} !',
+                        style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Global Stats Summary (Above children list)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+              child: Row(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Espace Parent',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Bonjour, ${user?['name'] ?? 'Parent'} !',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.logout_rounded, color: Colors.white),
-                          onPressed: () => context.read<AuthProvider>().logout(),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  // Global Stats Summary
-                  Row(
-                    children: [
-                      _buildMiniStat(Icons.people_outline, '${statsGlobal?['total_enfants'] ?? 0} Enfants'),
-                      const SizedBox(width: 12),
-                      _buildMiniStat(Icons.assignment_outlined, '${statsGlobal?['total_notes'] ?? 0} Notes'),
-                    ],
-                  ),
+                  _buildMiniStat(Icons.people_alt_outlined, '${statsGlobal?['total_enfants'] ?? 0} Enfants', const Color(0xFF059669)),
+                  const SizedBox(width: 12),
+                  _buildMiniStat(Icons.assignment_outlined, '${statsGlobal?['total_notes'] ?? 0} Notes total', Colors.orange),
                 ],
               ),
             ),
@@ -151,14 +177,17 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                                   CircleAvatar(
                                     radius: 30,
                                     backgroundColor: const Color(0xFF4338CA).withValues(alpha: 0.1),
-                                    child: Text(
-                                      (enfant['prenom'] as String?)?[0] ?? 'E',
-                                      style: const TextStyle(
-                                        color: Color(0xFF4338CA),
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20,
-                                      ),
-                                    ),
+                                    backgroundImage: enfant['photo'] != null ? NetworkImage(enfant['photo']) : null,
+                                    child: enfant['photo'] == null 
+                                      ? Text(
+                                          (enfant['prenom'] as String?)?[0] ?? 'E',
+                                          style: const TextStyle(
+                                            color: Color(0xFF4338CA),
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20,
+                                          ),
+                                        )
+                                      : null,
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
@@ -208,20 +237,27 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     );
   }
 
-  Widget _buildMiniStat(IconData icon, String label) {
+  Widget _buildMiniStat(IconData icon, String label, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.1)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white, size: 16),
-          const SizedBox(width: 6),
-          Text(label, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+          Icon(icon, color: color, size: 16),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gestparc/features/auth/providers/auth_provider.dart';
 import 'package:gestparc/features/auth/screens/login_screen.dart';
@@ -13,6 +12,11 @@ import 'package:gestparc/features/enseignant/screens/enseignant_dashboard_screen
 import 'package:gestparc/features/enseignant/screens/classe_detail_screen.dart';
 import 'package:gestparc/features/enseignant/screens/saisie_notes_screen.dart';
 import 'package:gestparc/features/enseignant/screens/appel_screen.dart';
+import 'package:gestparc/features/enseignant/screens/programmer_evaluation_screen.dart';
+import 'package:gestparc/features/enseignant/screens/evaluations_screen.dart';
+import 'package:gestparc/features/notifications/screens/notification_screen.dart';
+import 'package:gestparc/shared/screens/profile_screen.dart';
+import 'package:gestparc/shared/screens/settings_screen.dart';
 
 class AppRouter {
   final AuthProvider authProvider;
@@ -109,7 +113,32 @@ class AppRouter {
             name: 'faire_appel',
             builder: (context, state) => const AppelScreen(),
           ),
+          GoRoute(
+            path: 'evaluations/new',
+            name: 'programmer_evaluation',
+            builder: (context, state) => const ProgrammerEvaluationScreen(),
+          ),
+          GoRoute(
+            path: 'evaluations',
+            name: 'liste_evaluations',
+            builder: (context, state) => const EvaluationsScreen(),
+          ),
         ],
+      ),
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (context, state) => const NotificationScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        name: 'profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );

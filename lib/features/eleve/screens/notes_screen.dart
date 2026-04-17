@@ -13,7 +13,10 @@ class _NotesScreenState extends State<NotesScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<EleveProvider>().loadNotes());
+    Future.microtask(() {
+      if (!mounted) return;
+      context.read<EleveProvider>().loadNotes();
+    });
   }
 
   @override

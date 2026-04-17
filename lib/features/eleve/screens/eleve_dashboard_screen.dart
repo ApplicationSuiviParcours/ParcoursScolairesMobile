@@ -4,6 +4,7 @@ import 'package:gestparc/features/auth/providers/auth_provider.dart';
 import 'package:gestparc/features/eleve/providers/eleve_provider.dart';
 import 'package:gestparc/shared/widgets/stat_card.dart';
 import 'package:go_router/go_router.dart';
+import 'package:gestparc/shared/widgets/app_drawer.dart';
 
 class EleveDashboardScreen extends StatefulWidget {
   const EleveDashboardScreen({super.key});
@@ -13,11 +14,15 @@ class EleveDashboardScreen extends StatefulWidget {
 }
 
 class _EleveDashboardScreenState extends State<EleveDashboardScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() =>
-        context.read<EleveProvider>().loadDashboard());
+    Future.microtask(() {
+      if (!mounted) return;
+      context.read<EleveProvider>().loadDashboard();
+    });
   }
 
   @override
@@ -25,95 +30,136 @@ class _EleveDashboardScreenState extends State<EleveDashboardScreen> {
     final user = context.watch<AuthProvider>().user;
     final eleveProvider = context.watch<EleveProvider>();
     final stats = eleveProvider.dashboardData?['stats'];
+    final photoUrl = user?['photo_url'];
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: const Color(0xFFF8FAFC),
+      drawer: const AppDrawer(),
       body: CustomScrollView(
         slivers: [
-          // Header Mirroring Web Gradient
-          SliverToBoxAdapter(
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 60, 24, 32),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF4F46E5), Color(0xFF7C3AED), Color(0xFFDB2777)],
-                ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(40),
-                  bottomRight: Radius.circular(40),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          // Professional AppBar + Header
+          SliverAppBar(
+            expandedHeight: 180,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: const Color(0xFF4F46E5),
+            leading: IconButton(
+              icon: const Icon(Icons.menu_rounded, color: Colors.white),
+              onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+            ),
+            actions: [
+              Stack(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Tableau de bord',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Bonjour, ${user?['name'] ?? 'Élève'} !',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.logout_rounded, color: Colors.white),
-                          onPressed: () => context.read<AuthProvider>().logout(),
-                        ),
-                      ),
-                    ],
+                  IconButton(
+                    icon: const Icon(Icons.notifications_none_rounded, color: Colors.white),
+                    onPressed: () => context.push('/notifications'),
                   ),
-                  const SizedBox(height: 24),
-                  // Current Class Badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.class_outlined, color: Colors.white, size: 18),
-                        const SizedBox(width: 8),
-                        Text(
-                          eleveProvider.dashboardData?['classe']?['nom'] ?? 'Chargement...',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                        ),
-                      ],
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                      constraints: const BoxConstraints(minWidth: 8, minHeight: 8),
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => context.push('/profile'),
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.white24,
+                    backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+                    child: photoUrl == null ? const Icon(Icons.person, size: 16, color: Colors.white) : null,
+                  ),
+                ),
+              ),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 100, 24, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Éspace Élève',
+                        style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Bonjour, ${user?['name']?.split(' ')[0] ?? 'Élève'} !',
+                        style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Current Class Badge (Floating above stats)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.class_outlined, color: Color(0xFF4F46E5), size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Ma Classe', style: TextStyle(color: Colors.black54, fontSize: 12)),
+                          Text(
+                            eleveProvider.dashboardData?['classe']?['nom'] ?? 'Chargement...',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
 
           // Stats Grid
           SliverPadding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             sliver: SliverToBoxAdapter(
               child: eleveProvider.isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -148,7 +194,7 @@ class _EleveDashboardScreenState extends State<EleveDashboardScreen> {
                       GestureDetector(
                         onTap: () => context.push('/eleve/notes'),
                         child: StatCard(
-                          title: 'Évaluations',
+                          title: 'Saisie Notes',
                           value: '${stats?['total_notes'] ?? '0'}',
                           icon: Icons.assignment_outlined,
                           color: Colors.green,
@@ -168,10 +214,131 @@ class _EleveDashboardScreenState extends State<EleveDashboardScreen> {
             ),
           ),
 
-          // Recent Activity Header
+          // Performance par Matière (New)
+          if (stats?['moyennes_par_matiere'] != null && (stats['moyennes_par_matiere'] as List).isNotEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Performance par Matière',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                        ],
+                      ),
+                      child: Column(
+                        children: (stats?['moyennes_par_matiere'] as List).take(4).map<Widget>((m) {
+                          final double moyenne = (m['moyenne'] as num).toDouble();
+                          final color = moyenne >= 14 ? Colors.green : (moyenne >= 10 ? Colors.orange : Colors.red);
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(m['nom'], style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                                    Text('$moyenne/20', style: TextStyle(fontWeight: FontWeight.bold, color: color)),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: moyenne / 20,
+                                    backgroundColor: color.withValues(alpha: 0.1),
+                                    valueColor: AlwaysStoppedAnimation<Color>(color),
+                                    minHeight: 6,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          // Dernier Bulletin (New)
+          if (eleveProvider.dashboardData?['bulletin_recent'] != null)
+             SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Dernier Bulletin',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF1E293B), Color(0xFF334155)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  eleveProvider.dashboardData?['bulletin_recent']?['periode']?.toUpperCase() ?? '',
+                                  style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Moyenne: ${eleveProvider.dashboardData?['bulletin_recent']?['moyenne']}/20',
+                                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Rang: ${eleveProvider.dashboardData?['bulletin_recent']?['rang'] ?? '-'}',
+                                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.workspace_premium_rounded, color: Colors.amber, size: 32),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          // Recent Activity Header (existing)
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -206,7 +373,10 @@ class _EleveDashboardScreenState extends State<EleveDashboardScreen> {
                 (context, index) {
                   final recentNotes = eleveProvider.dashboardData?['recent']?['notes'] as List? ?? [];
                   if (recentNotes.isEmpty) {
-                    return const Center(child: Text('Aucune activité récente'));
+                    return const Center(child: Padding(
+                      padding: EdgeInsets.all(32.0),
+                      child: Text('Aucune activité récente'),
+                    ));
                   }
                   final note = recentNotes[index];
                   return Container(

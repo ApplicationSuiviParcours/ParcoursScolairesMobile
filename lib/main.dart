@@ -11,6 +11,8 @@ import 'package:gestparc/features/parent/providers/parent_provider.dart';
 import 'package:gestparc/features/parent/services/parent_service.dart';
 import 'package:gestparc/features/enseignant/providers/enseignant_provider.dart';
 import 'package:gestparc/features/enseignant/services/enseignant_service.dart';
+import 'package:gestparc/features/notifications/providers/notification_provider.dart';
+import 'package:gestparc/features/notifications/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +25,7 @@ void main() async {
   final eleveService = EleveService(dioClient);
   final parentService = ParentService(dioClient);
   final enseignantService = EnseignantService(dioClient);
+  final notificationService = NotificationService(dioClient);
 
   final appRouter = AppRouter(authProvider);
 
@@ -34,6 +37,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => EleveProvider(eleveService)),
         ChangeNotifierProvider(create: (_) => ParentProvider(parentService)),
         ChangeNotifierProvider(create: (_) => EnseignantProvider(enseignantService)),
+        ChangeNotifierProvider(create: (_) => NotificationProvider(notificationService)),
       ],
       child: MyApp(appRouter: appRouter),
     ),

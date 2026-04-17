@@ -29,12 +29,12 @@ class _AppelScreenState extends State<AppelScreen> {
     
     if (classeId != null) {
       try {
-        final matieres = await ep.loadMatieresForClasse(int.parse(classeId));
         final clResp = await ep.loadClasseEleves(int.parse(classeId));
         
         if (mounted) {
           setState(() {
-            _matieres = matieres;
+            // Filter assignments for this class
+            _matieres = ep.assignments.where((a) => a['classe_id'] == int.parse(classeId)).toList();
             if (_matieres.isNotEmpty) _selectedMatiere = _matieres.first;
             _eleves = clResp['eleves'] ?? [];
             _isLoading = false;
@@ -49,19 +49,26 @@ class _AppelScreenState extends State<AppelScreen> {
   Future<void> _saveAppel() async {
     if (_selectedMatiere == null) return;
     
-    final classeId = GoRouterState.of(context).pathParameters['classeId'];
+    if (_absents.isEmpty) {
+       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Aucun absent sélectionné. L\'appel est déjà complet ?')));
+       return;
+    }
+
     final data = {
-      'classe_id': int.parse(classeId!),
-      'matiere_nom': _selectedMatiere!['nom'],
+      'matiere_id': _selectedMatiere!['matiere_id'],
       'date_absence': DateTime.now().toIso8601String().split('T')[0],
-      'absents': _absents.toList(),
+      'absences': _absents.map((id) => {
+        'eleve_id': id,
+        'justifiee': false,
+        'commentaire': 'Absent lors de l\'appel mobile'
+      }).toList(),
     };
 
     setState(() => _isLoading = true);
     try {
       await context.read<EnseignantProvider>().saveAbsences(data);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Appel enregistré.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Appel enregistré avec succès.')));
         context.pop();
       }
     } catch (e) {
@@ -102,7 +109,7 @@ class _AppelScreenState extends State<AppelScreen> {
                 fillColor: Colors.white,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
               ),
-              value: _selectedMatiere,
+              initialValue: _selectedMatiere,
               items: _matieres.map((m) {
                 return DropdownMenuItem<Map<String, dynamic>>(
                   value: m,

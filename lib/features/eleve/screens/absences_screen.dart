@@ -13,7 +13,10 @@ class _AbsencesScreenState extends State<AbsencesScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<EleveProvider>().loadAbsences());
+    Future.microtask(() {
+      if (!mounted) return;
+      context.read<EleveProvider>().loadAbsences();
+    });
   }
 
   @override
