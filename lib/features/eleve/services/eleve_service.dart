@@ -41,6 +41,16 @@ class EleveService {
     }
   }
 
+  Future<Map<String, dynamic>> getBulletinDetail(int id) async {
+    try {
+      final response = await dioClient.dio.get('/eleve/bulletins/$id');
+      // La ressource retourne souvent l'objet directement sous 'data' ou à la racine
+      return response.data['data'] ?? response.data;
+    } catch (e) {
+      throw Exception('Erreur lors du chargement des détails du bulletin');
+    }
+  }
+
   Future<List<dynamic>> getAgenda() async {
     try {
       final response = await dioClient.dio.get('/eleve/agenda');

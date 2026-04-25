@@ -104,4 +104,8 @@ class EleveProvider extends ChangeNotifier {
       return [];
     }
   }
+
+  Future<Map<String, dynamic>> getBulletinDetail(int id) async {
+    return await _eleveService.getBulletinDetail(id);
+  }
 }

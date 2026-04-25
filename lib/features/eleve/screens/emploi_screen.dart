@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:gestparc/features/eleve/providers/eleve_provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class EmploiScreen extends StatefulWidget {
   const EmploiScreen({super.key});
@@ -33,21 +34,19 @@ class _EmploiScreenState extends State<EmploiScreen> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final eleveProvider = context.watch<EleveProvider>();
     final allEmploi = eleveProvider.dashboardData?['emploi'] as List? ?? [];
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Emploi du Temps', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.black87,
+        title: const Text('Emploi du Temps'),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          labelColor: const Color(0xFF4F46E5),
-          unselectedLabelColor: Colors.black45,
-          indicatorColor: const Color(0xFF4F46E5),
-          indicatorWeight: 3,
+          labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w800, fontSize: 14),
+          unselectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
+          indicatorColor: theme.colorScheme.primary,
+          indicatorWeight: 4,
+          indicatorPadding: const EdgeInsets.symmetric(horizontal: 16),
           tabs: _jours.map((j) => Tab(text: j)).toList(),
         ),
       ),
@@ -60,93 +59,122 @@ class _EmploiScreenState extends State<EmploiScreen> with SingleTickerProviderSt
                 final dayEmploi = allEmploi.where((e) => e['jour'] == dayNum).toList();
                 
                 if (dayEmploi.isEmpty) {
-                  return const Center(child: Text('Aucun cours ce jour.'));
+                  return _buildEmptyState(theme, _jours[dayIndex]);
                 }
 
                 return ListView.builder(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                   itemCount: dayEmploi.length,
                   itemBuilder: (context, index) {
                     final e = dayEmploi[index];
                     return Container(
-                      margin: const EdgeInsets.only(bottom: 20),
+                      margin: const EdgeInsets.only(bottom: 24),
                       child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Time indicators
                           SizedBox(
-                            width: 60,
+                            width: 65,
                             child: Column(
                               children: [
                                 Text(
                                   e['heure_debut'].toString().substring(0, 5),
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w900, 
+                                    fontSize: 14,
+                                    color: theme.colorScheme.primary,
+                                  ),
                                 ),
                                 Container(
-                                  height: 30,
+                                  height: 40,
                                   width: 2,
-                                  color: Colors.black12,
-                                  margin: const EdgeInsets.symmetric(vertical: 4),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [theme.colorScheme.primary, Colors.grey.withOpacity(0.2)],
+                                    ),
+                                  ),
+                                  margin: const EdgeInsets.symmetric(vertical: 6),
                                 ),
                                 Text(
                                   e['heure_fin'].toString().substring(0, 5),
-                                  style: const TextStyle(color: Colors.black45, fontSize: 12),
+                                  style: GoogleFonts.inter(
+                                    color: Colors.grey[500], 
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 20),
                           // Course Card
                           Expanded(
                             child: Container(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: const Border(
-                                  left: BorderSide(color: Color(0xFF4F46E5), width: 4),
-                                ),
+                                color: theme.cardTheme.color,
+                                borderRadius: BorderRadius.circular(24),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
+                                    color: Colors.black.withOpacity(0.03),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
                                   ),
                                 ],
+                                border: Border.all(color: Colors.grey.withOpacity(0.05), width: 1),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     e['matiere']?['nom'] ?? 'Matière',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.person_pin_outlined, size: 14, color: Colors.black45),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${e['enseignant']?['nom']} ${e['enseignant']?['prenom']}',
-                                        style: const TextStyle(color: Colors.black54, fontSize: 12),
-                                      ),
-                                    ],
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 17,
+                                    ),
                                   ),
                                   const SizedBox(height: 8),
                                   Row(
                                     children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
+                                      Icon(Icons.person_outline_rounded, size: 14, color: Colors.grey[500]),
+                                      const SizedBox(width: 6),
+                                      Expanded(
                                         child: Text(
-                                          'Salle: ${e['salle'] ?? 'TBA'}',
-                                          style: const TextStyle(
-                                            color: Color(0xFF4F46E5),
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
+                                          '${e['enseignant']?['nom']} ${e['enseignant']?['prenom']}',
+                                          style: GoogleFonts.inter(
+                                            color: Colors.grey[600], 
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
                                           ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.primary.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.location_on_outlined, size: 12, color: theme.colorScheme.primary),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'SALLE: ${e['salle'] ?? 'TBA'}',
+                                              style: GoogleFonts.inter(
+                                                color: theme.colorScheme.primary,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w800,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],
@@ -164,4 +192,34 @@ class _EmploiScreenState extends State<EmploiScreen> with SingleTickerProviderSt
             ),
     );
   }
+
+  Widget _buildEmptyState(ThemeData theme, String jour) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.event_available_rounded, size: 64, color: Colors.grey[300]),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Journée libre !',
+            style: theme.textTheme.headlineMedium?.copyWith(color: Colors.grey[400]),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Aucun cours programmé pour ce $jour.',
+            style: theme.textTheme.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
 }
+

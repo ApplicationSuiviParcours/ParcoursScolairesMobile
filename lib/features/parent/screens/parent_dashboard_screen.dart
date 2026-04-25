@@ -5,6 +5,7 @@ import 'package:gestparc/features/parent/providers/parent_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gestparc/shared/widgets/app_drawer.dart';
 import 'package:gestparc/core/utils/image_utils.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ParentDashboardScreen extends StatefulWidget {
   const ParentDashboardScreen({super.key});
@@ -46,78 +47,35 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
           slivers: [
-            // Premium AppBar
-            SliverAppBar(
-              expandedHeight: 200,
-              floating: false,
-              pinned: true,
-              backgroundColor: colorScheme.primary,
-              leading: IconButton(
-                icon: const Icon(Icons.menu_rounded, color: Colors.white),
-                onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-              ),
-              actions: [
-                _buildAvatar(context, photoUrl),
-              ],
-              flexibleSpace: FlexibleSpaceBar(
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [const Color(0xFF059669), const Color(0xFF10B981)],
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 110, 24, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'ESPACE PARENTAL',
-                          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.5),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Bonjour, ${user?['name']?.split(' ')[0] ?? 'Parent'} 👋',
-                          style: theme.textTheme.displayMedium?.copyWith(color: Colors.white, fontSize: 24),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Suivez le parcours de vos enfants',
-                          style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            _buildHeader(context, user, photoUrl),
 
-            // Global Overview
+            // Global Stats
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-                child: Row(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSummaryCard(theme, Icons.people_alt_rounded, '${statsGlobal?['total_enfants'] ?? 0} Enfants', const Color(0xFF059669)),
-                    const SizedBox(width: 12),
-                    _buildSummaryCard(theme, Icons.assignment_rounded, '${statsGlobal?['total_notes'] ?? 0} Notes', Colors.orange),
+                    _buildSectionHeader(theme, 'Aperçu Global', 'Résumé du compte'),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        _buildStatCard(theme, 'ENFANTS', '${statsGlobal?['total_enfants'] ?? 0}', Icons.people_alt_rounded, const Color(0xFF10B981)),
+                        const SizedBox(width: 16),
+                        _buildStatCard(theme, 'NOTES', '${statsGlobal?['total_notes'] ?? 0}', Icons.assignment_rounded, const Color(0xFFF59E0B)),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    _buildSectionHeader(theme, 'Mes Enfants', 'Suivi personnalisé'),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
             ),
 
-            // Children List Section
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
-                child: Text('Mes Enfants', style: theme.textTheme.headlineMedium),
-              ),
-            ),
-
+            // Children List
             SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: parentProvider.isLoading
                   ? _buildSkeletonList()
                   : SliverList(
@@ -133,48 +91,148 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                       ),
                     ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 120)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAvatar(BuildContext context, String photoUrl) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 16),
-      child: GestureDetector(
-        onTap: () => context.push('/profile'),
-        child: CircleAvatar(
-          radius: 18,
-          backgroundColor: Colors.white24,
-          backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
-          child: photoUrl.isEmpty ? const Icon(Icons.person, color: Colors.white, size: 20) : null,
+  Widget _buildSectionHeader(ThemeData theme, String title, String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          subtitle.toUpperCase(),
+          style: GoogleFonts.inter(
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            color: theme.colorScheme.primary.withOpacity(0.7),
+            letterSpacing: 1.2,
+          ),
+        ),
+        Text(
+          title,
+          style: theme.textTheme.headlineMedium?.copyWith(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, dynamic user, String photoUrl) {
+    final theme = Theme.of(context);
+    return SliverAppBar(
+      expandedHeight: 220,
+      pinned: true,
+      elevation: 0,
+      backgroundColor: const Color(0xFF059669),
+      leading: IconButton(
+        icon: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+          child: const Icon(Icons.menu_rounded, color: Colors.white, size: 20),
+        ),
+        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+      ),
+      actions: [
+        _buildProfileAvatar(context, photoUrl),
+        const SizedBox(width: 16),
+      ],
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF059669), Color(0xFF10B981)],
+                ),
+              ),
+            ),
+            Positioned(
+              top: -40,
+              right: -40,
+              child: CircleAvatar(radius: 100, backgroundColor: Colors.white.withOpacity(0.1)),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 30),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
+                    child: Text(
+                      'ESPACE PARENTAL',
+                      style: GoogleFonts.inter(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Bonjour, ${user?['name']?.split(' ')[0] ?? 'Parent'} 👋',
+                    style: GoogleFonts.poppins(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w900, letterSpacing: -1),
+                  ),
+                  Text(
+                    'Suivez le parcours de vos enfants.',
+                    style: GoogleFonts.inter(color: Colors.white.withOpacity(0.8), fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildSummaryCard(ThemeData theme, IconData icon, String text, Color color) {
+  Widget _buildProfileAvatar(BuildContext context, String photoUrl) {
+    return GestureDetector(
+      onTap: () => context.push('/profile'),
+      child: Center(
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+          ),
+          child: CircleAvatar(
+            radius: 18,
+            backgroundColor: Colors.white24,
+            backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+            child: photoUrl.isEmpty ? const Icon(Icons.person, color: Colors.white, size: 18) : null,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(ThemeData theme, String label, String value, IconData icon, Color color) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.2)),
+          color: theme.cardTheme.color,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: color.withOpacity(0.1), width: 1.5),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                text,
-                style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13),
-                overflow: TextOverflow.ellipsis,
-              ),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+              child: Icon(icon, color: color, size: 18),
             ),
+            const SizedBox(height: 16),
+            Text(value, style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.w900, color: color)),
+            Text(label, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.grey)),
           ],
         ),
       ),
@@ -186,13 +244,14 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(theme.brightness == Brightness.light ? 0.04 : 0.2), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 20, offset: const Offset(0, 10)),
         ],
+        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.05)),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         onTap: () {
           context.read<ParentProvider>().selectEnfant(enfant);
           context.push('/parent/enfant/${enfant['id']}');
@@ -204,17 +263,15 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
               Row(
                 children: [
                   Container(
-                    width: 60,
-                    height: 60,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: theme.colorScheme.primary.withOpacity(0.2), width: 2),
+                      border: Border.all(color: theme.colorScheme.primary.withOpacity(0.1), width: 3),
                     ),
                     child: CircleAvatar(
                       radius: 30,
-                      backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                      backgroundColor: theme.colorScheme.primary.withOpacity(0.05),
                       backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
-                      child: photoUrl.isEmpty ? Text( enfant['prenom'][0], style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 20)) : null,
+                      child: photoUrl.isEmpty ? Text(enfant['prenom'][0], style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w900)) : null,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -222,24 +279,29 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${enfant['prenom']} ${enfant['nom']}', style: theme.textTheme.titleLarge),
-                        Text(enfant['inscription_active']?['classe']?['nom_complet'] ?? enfant['inscription_active']?['classe']?['nom'] ?? 'Classe non définie', style: theme.textTheme.bodyMedium),
+                        Text('${enfant['prenom']} ${enfant['nom']}', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 2),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(color: theme.colorScheme.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                          child: Text(
+                            enfant['inscription_active']?['classe']?['nom_complet'] ?? 'N/A', 
+                            style: TextStyle(color: theme.colorScheme.primary, fontSize: 10, fontWeight: FontWeight.w900)
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  Icon(Icons.arrow_forward_ios_rounded, size: 16, color: theme.colorScheme.onSurface.withOpacity(0.3)),
+                  Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey[300]),
                 ],
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Divider(height: 1),
-              ),
+              const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Divider(height: 1)),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildEnfantStat('Moyenne', '${stats?['moyenne_generale'] ?? '0.00'}', theme.colorScheme.primary),
-                  _buildEnfantStat('Absences', '${stats?['total_absences'] ?? 0}', Colors.orange),
-                  _buildEnfantStat('Notes', '${stats?['total_notes'] ?? 0}', Colors.green),
+                  _buildEnfantStat(theme, 'MOYENNE', '${stats?['moyenne_generale'] ?? '0.00'}', theme.colorScheme.primary),
+                  _buildEnfantStat(theme, 'ABSENCES', '${stats?['total_absences'] ?? 0}', Colors.redAccent),
+                  _buildEnfantStat(theme, 'ÉVALS', '${stats?['total_notes'] ?? 0}', Colors.blueAccent),
                 ],
               ),
             ],
@@ -249,12 +311,11 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     );
   }
 
-  Widget _buildEnfantStat(String label, String value, Color color) {
+  Widget _buildEnfantStat(ThemeData theme, String label, String value, Color color) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: color)),
-        const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500)),
+        Text(value, style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w900, color: color)),
+        Text(label, style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w800, color: Colors.grey)),
       ],
     );
   }
@@ -264,8 +325,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       delegate: SliverChildBuilderDelegate(
         (context, index) => Container(
           margin: const EdgeInsets.only(bottom: 20),
-          height: 160,
-          decoration: BoxDecoration(color: Colors.grey.withOpacity(0.1), borderRadius: BorderRadius.circular(24)),
+          height: 180,
+          decoration: BoxDecoration(color: Colors.grey.withOpacity(0.05), borderRadius: BorderRadius.circular(28)),
         ),
         childCount: 2,
       ),

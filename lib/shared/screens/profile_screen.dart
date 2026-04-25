@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:gestparc/features/auth/providers/auth_provider.dart';
+import 'package:gestparc/core/utils/image_utils.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -10,167 +12,203 @@ class ProfileScreen extends StatelessWidget {
     final authProvider = context.watch<AuthProvider>();
     final user = authProvider.user;
     final role = authProvider.role ?? 'Utilisateur';
-    final photoUrl = user?['photo_url'];
+    final photoUrl = ImageUtils.getAbsoluteUrl(user?['photo_url'] ?? user?['profile']?['photo']);
+    final theme = Theme.of(context);
+    final color = _getRoleColor(role);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Mon Profil', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: const Text('Mon Profil', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header with Photo
-            Container(
-              width: double.infinity,
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 32),
-              child: Column(
-                children: [
-                  Stack(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: _getRoleColor(role).withValues(alpha: 0.2), width: 4),
-                        ),
-                        child: CircleAvatar(
-                          radius: 60,
-                          backgroundColor: Colors.grey[100],
-                          backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                          child: photoUrl == null 
-                              ? const Icon(Icons.person, size: 60, color: Colors.grey) 
-                              : null,
-                        ),
+            // Header with Background and Photo
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  height: 250,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [color, color.withOpacity(0.8)],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: -60,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10)),
+                        ],
                       ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: _getRoleColor(role),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 3),
-                          ),
-                          child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 20),
-                        ),
+                      child: CircleAvatar(
+                        radius: 65,
+                        backgroundColor: Colors.grey[200],
+                        backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+                        child: photoUrl.isEmpty 
+                            ? Icon(Icons.person_rounded, size: 65, color: color.withOpacity(0.5)) 
+                            : null,
                       ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    user?['name'] ?? 'Nom Inconnu',
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _getRoleLabel(role),
-                    style: TextStyle(color: _getRoleColor(role), fontWeight: FontWeight.w600, fontSize: 16),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 12),
-            
-            // Info Sections
-            _buildSection(
-              'Informations Personnelles',
-              [
-                _buildInfoTile(Icons.email_outlined, 'Email', user?['email'] ?? 'Non renseigné'),
-                _buildInfoTile(Icons.phone_android_rounded, 'Téléphone', user?['profile']?['telephone'] ?? 'Non renseigné'),
-                _buildInfoTile(Icons.location_on_outlined, 'Adresse', user?['profile']?['adresse'] ?? 'Non renseignée'),
+                ),
               ],
             ),
             
-            const SizedBox(height: 12),
+            const SizedBox(height: 70),
             
-            _buildSection(
-              'Informations Académiques',
-              [
-                _buildInfoTile(Icons.badge_outlined, 'Matricule', user?['profile']?['matricule'] ?? 'N/A'),
-                if (role == 'eleve')
-                  _buildInfoTile(Icons.school_outlined, 'Classe actuelle', user?['profile']?['classe_actuelle']?['nom_complet'] ?? 'N/A'),
-                if (role == 'enseignant')
-                  _buildInfoTile(Icons.workspace_premium_outlined, 'Spécialité', user?['profile']?['specialite'] ?? 'N/A'),
+            // Name and Role
+            Column(
+              children: [
+                Text(
+                  user?['name'] ?? 'Nom Inconnu',
+                  style: GoogleFonts.poppins(fontSize: 26, fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    _getRoleLabel(role).toUpperCase(),
+                    style: GoogleFonts.inter(
+                      color: color, 
+                      fontWeight: FontWeight.w900, 
+                      fontSize: 11,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ),
               ],
             ),
             
             const SizedBox(height: 32),
             
-            // Action Buttons
+            // Info Cards
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  _buildProfileCard(
+                    theme,
+                    'Informations Personnelles',
+                    [
+                      _buildInfoRow(theme, Icons.email_outlined, 'Email', user?['email'] ?? 'Non renseigné'),
+                      _buildInfoRow(theme, Icons.phone_iphone_rounded, 'Téléphone', user?['profile']?['telephone'] ?? 'Non renseigné'),
+                      _buildInfoRow(theme, Icons.location_on_outlined, 'Adresse', user?['profile']?['adresse'] ?? 'Non renseignée'),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildProfileCard(
+                    theme,
+                    'Statut Académique',
+                    [
+                      _buildInfoRow(theme, Icons.badge_outlined, 'Matricule', user?['profile']?['matricule'] ?? 'N/A'),
+                      if (role == 'eleve')
+                        _buildInfoRow(theme, Icons.school_outlined, 'Classe', user?['profile']?['classe_actuelle']?['nom_complet'] ?? 'N/A'),
+                      if (role == 'enseignant')
+                        _buildInfoRow(theme, Icons.workspace_premium_outlined, 'Spécialité', user?['profile']?['specialite'] ?? 'N/A'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 40),
+            
+            // Action Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // TODO: Edit profile
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _getRoleColor(role),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: const Text('Modifier le profil', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              child: ElevatedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.edit_rounded, size: 20),
+                label: const Text('MODIFIER LE PROFIL'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 60),
+                  backgroundColor: color,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 ),
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 60),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSection(String title, List<Widget> children) {
+  Widget _buildProfileCard(ThemeData theme, String title, List<Widget> children) {
     return Container(
       width: double.infinity,
-      color: Colors.white,
       padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: theme.cardTheme.color,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 20, offset: const Offset(0, 10)),
+        ],
+        border: Border.all(color: Colors.grey.withOpacity(0.05)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black45, letterSpacing: 0.5),
+            style: GoogleFonts.inter(
+              fontSize: 12, 
+              fontWeight: FontWeight.w900, 
+              color: theme.colorScheme.primary,
+              letterSpacing: 1,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           ...children,
         ],
       ),
     );
   }
 
-  Widget _buildInfoTile(IconData icon, String label, String value) {
+  Widget _buildInfoRow(ThemeData theme, IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
+              color: theme.colorScheme.primary.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: Colors.black54, size: 20),
+            child: Icon(icon, color: theme.colorScheme.primary, size: 20),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(color: Colors.black38, fontSize: 13)),
-                Text(value, style: const TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w500)),
+                Text(label, style: GoogleFonts.inter(color: Colors.grey[500], fontSize: 12, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(value, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700)),
               ],
             ),
           ),
@@ -181,20 +219,21 @@ class ProfileScreen extends StatelessWidget {
 
   String _getRoleLabel(String role) {
     switch (role.toLowerCase()) {
-      case 'eleve': return 'Élève';
-      case 'enseignant': return 'Enseignant';
-      case 'parent': return 'Parent';
-      case 'administrateur': return 'Administrateur';
+      case 'eleve': return 'Compte Élève';
+      case 'enseignant': return 'Compte Enseignant';
+      case 'parent': return 'Compte Parent';
+      case 'administrateur': return 'Compte Admin';
       default: return role;
     }
   }
 
   Color _getRoleColor(String role) {
     switch (role.toLowerCase()) {
-      case 'eleve': return const Color(0xFF4F46E5);
-      case 'enseignant': return const Color(0xFFEA580C);
-      case 'parent': return const Color(0xFF059669);
-      default: return const Color(0xFF4F46E5);
+      case 'eleve': return const Color(0xFF6366F1);
+      case 'enseignant': return const Color(0xFFF59E0B);
+      case 'parent': return const Color(0xFF10B981);
+      default: return const Color(0xFF6366F1);
     }
   }
 }
+
