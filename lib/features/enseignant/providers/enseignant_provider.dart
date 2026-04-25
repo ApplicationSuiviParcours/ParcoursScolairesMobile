@@ -57,11 +57,10 @@ class EnseignantProvider extends ChangeNotifier {
       // Typically we'd have an endpoint or filter the dashboard data
       // For now, let's assume we can fetch taught classes/matieres
       final response = await _enseignantService.getDashboardData();
-      final classes = response['classes'] as List? ?? [];
-      final classe = classes.firstWhere((c) => c['id'] == classeId, orElse: () => null);
-      if (classe != null) {
-        // 'matiere' string might need split if it's "Maths, Physiques"
-        return (classe['matiere'] as String).split(', ').map((m) => {'nom': m}).toList();
+      final assignments = response['assignments'] as List? ?? [];
+      final assignment = assignments.firstWhere((c) => c['classe_id'] == classeId, orElse: () => null);
+      if (assignment != null) {
+        return [{'id': assignment['matiere_id'], 'nom': assignment['matiere_nom']}];
       }
       return [];
     } catch (e) {

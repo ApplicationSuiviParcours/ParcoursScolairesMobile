@@ -40,4 +40,13 @@ class EleveService {
       throw Exception('Erreur lors du chargement des bulletins');
     }
   }
+
+  Future<List<dynamic>> getAgenda() async {
+    try {
+      final response = await dioClient.dio.get('/eleve/agenda');
+      return response.data['data'] ?? [];
+    } catch (e) {
+      throw Exception('Erreur lors du chargement de l\'agenda');
+    }
+  }
 }

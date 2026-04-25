@@ -95,4 +95,13 @@ class EleveProvider extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  Future<List<dynamic>> loadAgenda() async {
+    try {
+      return await _eleveService.getAgenda();
+    } catch (e) {
+      _error = e.toString();
+      return [];
+    }
+  }
 }

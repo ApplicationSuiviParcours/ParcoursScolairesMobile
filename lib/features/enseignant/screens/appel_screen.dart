@@ -113,7 +113,7 @@ class _AppelScreenState extends State<AppelScreen> {
               items: _matieres.map((m) {
                 return DropdownMenuItem<Map<String, dynamic>>(
                   value: m,
-                  child: Text(m['nom']),
+                  child: Text(m['matiere_nom'] ?? 'Matière'),
                 );
               }).toList(),
               onChanged: (val) => setState(() => _selectedMatiere = val),

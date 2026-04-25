@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:gestparc/core/network/dio_client.dart';
 import 'package:gestparc/core/routes/app_router.dart';
 import 'package:gestparc/core/theme/app_theme.dart';
+import 'package:gestparc/core/theme/theme_provider.dart';
 import 'package:gestparc/features/auth/providers/auth_provider.dart';
 import 'package:gestparc/features/auth/services/auth_service.dart';
 import 'package:gestparc/features/eleve/providers/eleve_provider.dart';
@@ -32,6 +33,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         Provider<DioClient>.value(value: dioClient),
         ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
         ChangeNotifierProvider(create: (_) => EleveProvider(eleveService)),
@@ -51,10 +53,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    
     return MaterialApp.router(
       title: 'GEST\'PARC',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeProvider.themeMode,
       routerConfig: appRouter.router,
     );
   }

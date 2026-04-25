@@ -335,7 +335,7 @@ class EnfantDetailScreen extends StatelessWidget {
                     ),
                   );
                 },
-                childCount: (stats?['dernieres_notes'] as List? ?? []).length,
+                childCount: (stats?['dernieres_notes'] as List? ?? []).isEmpty ? 1 : (stats?['dernieres_notes'] as List).length,
               ),
             ),
           ),
