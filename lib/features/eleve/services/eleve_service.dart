@@ -7,56 +7,60 @@ class EleveService {
 
   Future<Map<String, dynamic>> getDashboardData() async {
     try {
-      final response = await dioClient.dio.get('/eleve/dashboard');
+      final response = await dioClient.dio.get('eleve/dashboard');
       return response.data;
     } catch (e) {
-      throw Exception('Erreur lors du chargement du tableau de bord élève');
+      throw Exception('Erreur tableau de bord: $e');
     }
   }
 
-  Future<Map<String, dynamic>> getNotes() async {
+  Future<dynamic> getNotes({int? childId}) async {
     try {
-      final response = await dioClient.dio.get('/eleve/notes');
+      final endpoint = childId != null ? 'parent/eleve/$childId/notes' : 'eleve/notes';
+      final response = await dioClient.dio.get(endpoint);
       return response.data;
     } catch (e) {
-      throw Exception('Erreur lors du chargement des notes');
+      throw Exception('Erreur notes: $e');
     }
   }
 
-  Future<Map<String, dynamic>> getAbsences() async {
+  Future<dynamic> getAbsences({int? childId}) async {
     try {
-      final response = await dioClient.dio.get('/eleve/absences');
+      final endpoint = childId != null ? 'parent/eleve/$childId/absences' : 'eleve/absences';
+      final response = await dioClient.dio.get(endpoint);
       return response.data;
     } catch (e) {
-      throw Exception('Erreur lors du chargement des absences');
+      throw Exception('Erreur absences: $e');
     }
   }
 
-  Future<Map<String, dynamic>> getBulletins() async {
+  Future<dynamic> getBulletins({int? childId}) async {
     try {
-      final response = await dioClient.dio.get('/eleve/bulletins');
+      final endpoint = childId != null ? 'parent/eleve/$childId/bulletins' : 'eleve/bulletins';
+      final response = await dioClient.dio.get(endpoint);
       return response.data;
     } catch (e) {
-      throw Exception('Erreur lors du chargement des bulletins');
+      throw Exception('Erreur bulletins: $e');
     }
   }
 
-  Future<Map<String, dynamic>> getBulletinDetail(int id) async {
+  Future<dynamic> getBulletinDetail(int id, {int? childId}) async {
     try {
-      final response = await dioClient.dio.get('/eleve/bulletins/$id');
+      final endpoint = childId != null ? 'parent/eleve/$childId/bulletins/$id' : 'eleve/bulletins/$id';
+      final response = await dioClient.dio.get(endpoint);
       // La ressource retourne souvent l'objet directement sous 'data' ou à la racine
       return response.data['data'] ?? response.data;
     } catch (e) {
-      throw Exception('Erreur lors du chargement des détails du bulletin');
+      throw Exception('Erreur détail bulletin: $e');
     }
   }
 
   Future<List<dynamic>> getAgenda() async {
     try {
-      final response = await dioClient.dio.get('/eleve/agenda');
+      final response = await dioClient.dio.get('eleve/agenda');
       return response.data['data'] ?? [];
     } catch (e) {
-      throw Exception('Erreur lors du chargement de l\'agenda');
+      throw Exception('Erreur agenda: $e');
     }
   }
 }

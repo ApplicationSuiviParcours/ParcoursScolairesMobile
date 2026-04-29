@@ -4,7 +4,8 @@ import 'package:gestparc/features/eleve/providers/eleve_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class EmploiScreen extends StatefulWidget {
-  const EmploiScreen({super.key});
+  final int? childId;
+  const EmploiScreen({super.key, this.childId});
 
   @override
   State<EmploiScreen> createState() => _EmploiScreenState();
@@ -20,7 +21,7 @@ class _EmploiScreenState extends State<EmploiScreen> with SingleTickerProviderSt
     _tabController = TabController(length: 5, vsync: this);
     Future.microtask(() {
       if (!mounted) return;
-      context.read<EleveProvider>().loadEmploi();
+      context.read<EleveProvider>().loadEmploi(childId: widget.childId);
     });
   }
 
@@ -52,7 +53,12 @@ class _EmploiScreenState extends State<EmploiScreen> with SingleTickerProviderSt
       ),
       body: eleveProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
+          : eleveProvider.error != null
+              ? Center(child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Text('Erreur: ${eleveProvider.error}', textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
+                ))
+              : TabBarView(
               controller: _tabController,
               children: List.generate(5, (dayIndex) {
                 final dayNum = dayIndex + 1;

@@ -4,6 +4,22 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:gestparc/features/auth/providers/auth_provider.dart';
 
+class NavItem {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  final String route;
+  final bool isCenter;
+
+  NavItem({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.route,
+    this.isCenter = false,
+  });
+}
+
 class AppMainLayout extends StatelessWidget {
   final Widget child;
 
@@ -14,83 +30,118 @@ class AppMainLayout extends StatelessWidget {
     final location = GoRouterState.of(context).matchedLocation;
     final authProvider = context.watch<AuthProvider>();
     final role = authProvider.role ?? 'eleve';
-    
-    // Base path for the current role
     final String baseRoute = '/$role';
-    
-    // Determine current index based on location
-    int currentIndex = 0;
-    if (location == baseRoute) {
-      currentIndex = 0;
-    } else if (location.startsWith('/notifications')) {
-      currentIndex = 1;
-    } else if (location.startsWith('/profile')) {
-      currentIndex = 2;
+
+    List<NavItem> items = [];
+    if (role == 'eleve') {
+      items = [
+        NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Accueil', route: baseRoute),
+        NavItem(icon: Icons.assignment_outlined, activeIcon: Icons.assignment_rounded, label: 'Notes', route: '$baseRoute/notes'),
+        NavItem(icon: Icons.chat_bubble_outline_rounded, activeIcon: Icons.chat_bubble_rounded, label: 'Messagerie', route: '/notifications', isCenter: true),
+        NavItem(icon: Icons.calendar_today_outlined, activeIcon: Icons.calendar_today_rounded, label: 'Emploi du temps', route: '$baseRoute/emploi'),
+        NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profil', route: '/profile'),
+      ];
+    } else {
+      items = [
+        NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Accueil', route: baseRoute),
+        NavItem(icon: Icons.assignment_outlined, activeIcon: Icons.assignment_rounded, label: 'Enfants', route: baseRoute),
+        NavItem(icon: Icons.chat_bubble_outline_rounded, activeIcon: Icons.chat_bubble_rounded, label: 'Messagerie', route: '/notifications', isCenter: true),
+        NavItem(icon: Icons.calendar_today_outlined, activeIcon: Icons.calendar_today_rounded, label: 'Emploi du temps', route: baseRoute),
+        NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profil', route: '/profile'),
+      ];
     }
 
+    int currentIndex = items.indexWhere((item) => location == item.route);
+    if (currentIndex == -1 && location.startsWith(baseRoute)) currentIndex = 0;
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       body: child,
-      bottomNavigationBar: _buildBottomBar(context, currentIndex, baseRoute),
+      bottomNavigationBar: _buildBottomBar(context, items, currentIndex, isDark),
     );
   }
 
-  Widget _buildBottomBar(BuildContext context, int currentIndex, String baseRoute) {
+  Widget _buildBottomBar(BuildContext context, List<NavItem> items, int currentIndex, bool isDark) {
     return Container(
-      height: 85,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.only(bottom: 12, top: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(30),
-          topRight: Radius.circular(30),
-        ),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(context, Icons.home_rounded, 'Accueil', currentIndex == 0, () => context.go(baseRoute)),
-          _buildNavItem(context, Icons.chat_bubble_outline_rounded, 'Messagerie', currentIndex == 1, () => context.push('/notifications')),
-          _buildNavItem(context, Icons.person_outline_rounded, 'Profil', currentIndex == 2, () => context.push('/profile')),
-        ],
-      ),
-    );
-  }
+      child: SafeArea(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: List.generate(items.length, (index) {
+            final item = items[index];
+            final isActive = currentIndex == index;
 
-  Widget _buildNavItem(BuildContext context, IconData icon, String label, bool isActive, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            decoration: BoxDecoration(
-              color: isActive ? const Color(0xFF3B82F6) : Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Icon(
-              icon,
-              color: isActive ? Colors.white : Colors.white60,
-              size: 24,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              color: isActive ? Colors.white : Colors.white60,
-              fontSize: 10,
-              fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
-            ),
-          ),
-        ],
+            if (item.isCenter) {
+              return GestureDetector(
+                onTap: () => context.push(item.route),
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  margin: const EdgeInsets.only(bottom: 5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF3B82F6),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF3B82F6).withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.add, color: Colors.white, size: 28),
+                ),
+              );
+            }
+
+            return GestureDetector(
+              onTap: () {
+                if (item.route.startsWith('/')) {
+                   if (item.route == '/notifications' || item.route == '/profile') {
+                      context.push(item.route);
+                   } else {
+                      context.go(item.route);
+                   }
+                }
+              },
+              child: Container(
+                color: Colors.transparent, // expand tap area
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isActive ? item.activeIcon : item.icon,
+                      color: isActive ? const Color(0xFF3B82F6) : (isDark ? Colors.grey[500] : Colors.grey[400]),
+                      size: 26,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.label,
+                      style: GoogleFonts.inter(
+                        color: isActive ? const Color(0xFF3B82F6) : (isDark ? Colors.grey[500] : Colors.grey[400]),
+                        fontSize: 10,
+                        fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ),
       ),
     );
   }

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:gestparc/features/auth/providers/auth_provider.dart';
 import 'package:gestparc/features/eleve/providers/eleve_provider.dart';
+import 'package:gestparc/features/notifications/providers/notification_provider.dart';
 import 'package:gestparc/shared/widgets/app_drawer.dart';
 import 'package:gestparc/core/utils/image_utils.dart';
 import 'package:gestparc/core/theme/theme_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert' as dart_convert;
 
 class EleveDashboardScreen extends StatefulWidget {
   const EleveDashboardScreen({super.key});
@@ -26,7 +28,10 @@ class _EleveDashboardScreenState extends State<EleveDashboardScreen> {
 
   Future<void> _refreshData() async {
     if (!mounted) return;
-    await context.read<EleveProvider>().loadDashboard();
+    await Future.wait([
+      context.read<EleveProvider>().loadDashboard(),
+      context.read<NotificationProvider>().loadNotifications(),
+    ]);
   }
 
   @override
@@ -130,9 +135,10 @@ class _EleveDashboardScreenState extends State<EleveDashboardScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, dynamic user, String photoUrl, ThemeProvider themeProvider) {
+  Widget _buildHeader(BuildContext context, dynamic user, String? photoData, ThemeProvider themeProvider) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final name = user?['name']?.split(' ')[0] ?? 'Élève';
 
     return SliverAppBar(
       expandedHeight: 220,
@@ -150,6 +156,43 @@ class _EleveDashboardScreenState extends State<EleveDashboardScreen> {
         onPressed: () => _scaffoldKey.currentState?.openDrawer(),
       ),
       actions: [
+        Consumer<NotificationProvider>(
+          builder: (context, notificationProvider, _) {
+            final count = notificationProvider.unreadCount;
+            return IconButton(
+              icon: CircleAvatar(
+                backgroundColor: Colors.white.withOpacity(0.2),
+                radius: 18,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.notifications_rounded, color: Colors.white, size: 18),
+                    if (count > 0)
+                      Positioned(
+                        right: -4,
+                        top: -4,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: theme.colorScheme.primary, width: 1),
+                          ),
+                          constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                          child: Text(
+                            count > 9 ? '9+' : count.toString(),
+                            style: const TextStyle(color: Colors.white, fontSize: 7, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              onPressed: () => context.push('/notifications'),
+            );
+          },
+        ),
         IconButton(
           icon: CircleAvatar(
             backgroundColor: Colors.white.withOpacity(0.2),
@@ -163,7 +206,7 @@ class _EleveDashboardScreenState extends State<EleveDashboardScreen> {
           onPressed: () => themeProvider.toggleTheme(),
         ),
         const SizedBox(width: 8),
-        _buildProfileAvatar(context, user, photoUrl),
+        _buildRobustAvatar(context, user, photoData, 18),
         const SizedBox(width: 16),
       ],
       flexibleSpace: FlexibleSpaceBar(
@@ -180,7 +223,7 @@ class _EleveDashboardScreenState extends State<EleveDashboardScreen> {
                 ),
               ),
             ),
-            // Décorations simplifiées pour éviter les bugs de rendu carré
+            // Décorations simplifiées
             Positioned(
               top: -30,
               right: -30,
@@ -222,7 +265,7 @@ class _EleveDashboardScreenState extends State<EleveDashboardScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Salut, ${user?['name']?.split(' ')[0] ?? 'Élève'} 👋',
+                    'Salut, $name 👋',
                     style: GoogleFonts.poppins(
                       color: Colors.white,
                       fontSize: 32,
@@ -247,9 +290,39 @@ class _EleveDashboardScreenState extends State<EleveDashboardScreen> {
     );
   }
 
-  Widget _buildProfileAvatar(BuildContext context, dynamic user, String photoUrl) {
+  Widget _buildRobustAvatar(BuildContext context, dynamic user, String? photoData, double radius) {
     final String initialString = user?['initials']?.toString() ?? user?['name']?[0]?.toUpperCase() ?? '?';
     final initials = initialString.trim().isNotEmpty ? initialString : '?';
+
+    Widget imageWidget;
+    
+    if (photoData != null && photoData.isNotEmpty) {
+      if (photoData.startsWith('data:image') || photoData.length > 500) {
+        // Decode Base64 string safely
+        try {
+          final String base64Str = photoData.contains(',') ? photoData.split(',')[1] : photoData;
+          final bytes = dart_convert.base64Decode(base64Str.replaceAll(RegExp(r'\s+'), ''));
+          imageWidget = Image.memory(bytes, width: radius * 2, height: radius * 2, fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => _buildFallbackAvatar(initials),
+          );
+        } catch (e) {
+          imageWidget = _buildFallbackAvatar(initials);
+        }
+      } else if (photoData.startsWith('http')) {
+        // Load from network URL
+        imageWidget = Image.network(
+          photoData,
+          width: radius * 2,
+          height: radius * 2,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _buildFallbackAvatar(initials),
+        );
+      } else {
+        imageWidget = _buildFallbackAvatar(initials);
+      }
+    } else {
+      imageWidget = _buildFallbackAvatar(initials);
+    }
 
     return GestureDetector(
       onTap: () => context.push('/profile'),
@@ -262,24 +335,19 @@ class _EleveDashboardScreenState extends State<EleveDashboardScreen> {
           ],
         ),
         child: CircleAvatar(
-          radius: 20,
+          radius: radius,
           backgroundColor: Colors.white.withOpacity(0.2),
-          child: ClipOval(
-            child: photoUrl.isNotEmpty
-                ? Image.network(
-                    photoUrl,
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Center(child: Text(initials, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)));
-                    },
-                    errorBuilder: (context, error, stackTrace) => Center(child: Text(initials, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))),
-                  )
-                : Center(child: Text(initials, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold))),
-          ),
+          child: ClipOval(child: imageWidget),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFallbackAvatar(String initials) {
+    return Center(
+      child: Text(
+        initials,
+        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
       ),
     );
   }

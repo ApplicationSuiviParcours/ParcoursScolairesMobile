@@ -126,31 +126,13 @@ class ProfileScreen extends StatelessWidget {
                       _buildInfoRow(theme, Icons.badge_outlined, 'Matricule', user?['profile']?['matricule'] ?? 'N/A'),
                       if (role == 'eleve')
                         _buildInfoRow(theme, Icons.school_outlined, 'Classe', user?['profile']?['classe_actuelle']?['nom_complet'] ?? 'N/A'),
-                      if (role == 'enseignant')
-                        _buildInfoRow(theme, Icons.workspace_premium_outlined, 'Spécialité', user?['profile']?['specialite'] ?? 'N/A'),
                     ],
                   ),
                 ],
               ),
             ),
             
-            const SizedBox(height: 40),
-            
-            // Action Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.edit_rounded, size: 20),
-                label: const Text('MODIFIER LE PROFIL'),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 60),
-                  backgroundColor: color,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 60),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -220,7 +202,6 @@ class ProfileScreen extends StatelessWidget {
   String _getRoleLabel(String role) {
     switch (role.toLowerCase()) {
       case 'eleve': return 'Compte Élève';
-      case 'enseignant': return 'Compte Enseignant';
       case 'parent': return 'Compte Parent';
       case 'administrateur': return 'Compte Admin';
       default: return role;
@@ -230,7 +211,6 @@ class ProfileScreen extends StatelessWidget {
   Color _getRoleColor(String role) {
     switch (role.toLowerCase()) {
       case 'eleve': return const Color(0xFF6366F1);
-      case 'enseignant': return const Color(0xFFF59E0B);
       case 'parent': return const Color(0xFF10B981);
       default: return const Color(0xFF6366F1);
     }

@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:gestparc/shared/widgets/app_drawer.dart';
 import 'package:gestparc/core/utils/image_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:gestparc/core/theme/theme_provider.dart';
+import 'package:gestparc/features/notifications/providers/notification_provider.dart';
+import 'dart:convert' as dart_convert;
 
 class ParentDashboardScreen extends StatefulWidget {
   const ParentDashboardScreen({super.key});
@@ -25,7 +28,10 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
   Future<void> _refreshData() async {
     if (!mounted) return;
-    await context.read<ParentProvider>().loadDashboard();
+    await Future.wait([
+      context.read<ParentProvider>().loadDashboard(),
+      context.read<NotificationProvider>().loadNotifications(),
+    ]);
   }
 
   @override
@@ -125,6 +131,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   }
 
   Widget _buildHeader(BuildContext context, dynamic user, String photoUrl) {
+    final themeProvider = context.watch<ThemeProvider>();
     final theme = Theme.of(context);
     return SliverAppBar(
       expandedHeight: 220,
@@ -140,7 +147,57 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         onPressed: () => _scaffoldKey.currentState?.openDrawer(),
       ),
       actions: [
-        _buildProfileAvatar(context, photoUrl),
+        Consumer<NotificationProvider>(
+          builder: (context, notificationProvider, _) {
+            final count = notificationProvider.unreadCount;
+            return IconButton(
+              icon: CircleAvatar(
+                backgroundColor: Colors.white.withOpacity(0.2),
+                radius: 18,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.notifications_rounded, color: Colors.white, size: 18),
+                    if (count > 0)
+                      Positioned(
+                        right: -4,
+                        top: -4,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFF0F172A), width: 1),
+                          ),
+                          constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                          child: Text(
+                            count > 9 ? '9+' : count.toString(),
+                            style: const TextStyle(color: Colors.white, fontSize: 7, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              onPressed: () => context.push('/notifications'),
+            );
+          },
+        ),
+        IconButton(
+          icon: CircleAvatar(
+            backgroundColor: Colors.white.withOpacity(0.2),
+            radius: 18,
+            child: Icon(
+              themeProvider.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+              color: Colors.white,
+              size: 18,
+            ),
+          ),
+          onPressed: () => themeProvider.toggleTheme(),
+        ),
+        const SizedBox(width: 8),
+        _buildRobustAvatar(context, user, photoUrl, 18),
         const SizedBox(width: 16),
       ],
       flexibleSpace: FlexibleSpaceBar(
@@ -193,7 +250,38 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     );
   }
 
-  Widget _buildProfileAvatar(BuildContext context, String photoUrl) {
+  Widget _buildRobustAvatar(BuildContext context, dynamic user, String? photoData, double radius) {
+    final String initialString = user?['initials']?.toString() ?? user?['name']?[0]?.toUpperCase() ?? '?';
+    final initials = initialString.trim().isNotEmpty ? initialString : '?';
+
+    Widget imageWidget;
+    
+    if (photoData != null && photoData.isNotEmpty) {
+      if (photoData.startsWith('data:image') || photoData.length > 500) {
+        try {
+          final String base64Str = photoData.contains(',') ? photoData.split(',')[1] : photoData;
+          final bytes = dart_convert.base64Decode(base64Str.replaceAll(RegExp(r'\s+'), ''));
+          imageWidget = Image.memory(bytes, width: radius * 2, height: radius * 2, fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => _buildFallbackAvatar(initials),
+          );
+        } catch (e) {
+          imageWidget = _buildFallbackAvatar(initials);
+        }
+      } else if (photoData.startsWith('http')) {
+        imageWidget = Image.network(
+          photoData,
+          width: radius * 2,
+          height: radius * 2,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _buildFallbackAvatar(initials),
+        );
+      } else {
+        imageWidget = _buildFallbackAvatar(initials);
+      }
+    } else {
+      imageWidget = _buildFallbackAvatar(initials);
+    }
+
     return GestureDetector(
       onTap: () => context.push('/profile'),
       child: Center(
@@ -201,14 +289,25 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 5)),
+            ],
           ),
           child: CircleAvatar(
-            radius: 18,
-            backgroundColor: Colors.white24,
-            backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
-            child: photoUrl.isEmpty ? const Icon(Icons.person, color: Colors.white, size: 18) : null,
+            radius: radius,
+            backgroundColor: Colors.white.withOpacity(0.2),
+            child: ClipOval(child: imageWidget),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFallbackAvatar(String initials) {
+    return Center(
+      child: Text(
+        initials,
+        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -299,9 +398,9 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildEnfantStat(theme, 'MOYENNE', '${stats?['moyenne_generale'] ?? '0.00'}', theme.colorScheme.primary),
-                  _buildEnfantStat(theme, 'ABSENCES', '${stats?['total_absences'] ?? 0}', Colors.redAccent),
-                  _buildEnfantStat(theme, 'ÉVALS', '${stats?['total_notes'] ?? 0}', Colors.blueAccent),
+                  _buildEnfantStat(theme, 'MOYENNE', '${stats?['moyenne_generale'] ?? stats?['moyenne'] ?? '0.00'}', theme.colorScheme.primary),
+                  _buildEnfantStat(theme, 'ABSENCES', '${stats?['total_absences'] ?? stats?['absences'] ?? 0}', Colors.redAccent),
+                  _buildEnfantStat(theme, 'ÉVALS', '${stats?['total_notes'] ?? stats?['total'] ?? 0}', Colors.blueAccent),
                 ],
               ),
             ],

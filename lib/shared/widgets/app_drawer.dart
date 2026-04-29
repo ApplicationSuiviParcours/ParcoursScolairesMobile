@@ -5,6 +5,7 @@ import 'package:gestparc/core/theme/theme_provider.dart';
 import 'package:gestparc/core/utils/image_utils.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert' as dart_convert;
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -19,7 +20,10 @@ class AppDrawer extends StatelessWidget {
 
     String photoUrl = '';
     if (user != null) {
-      photoUrl = ImageUtils.getAbsoluteUrl(user['photo_url'] ?? (user['profile']?['photo']));
+      photoUrl = user['photo'] ?? user['photo_url'] ?? user['profile']?['photo'] ?? '';
+      if (photoUrl.isNotEmpty && !photoUrl.startsWith('data:image') && photoUrl.length < 500 && !photoUrl.startsWith('http')) {
+        photoUrl = ImageUtils.getAbsoluteUrl(photoUrl);
+      }
     }
 
     return Drawer(
@@ -41,7 +45,6 @@ class AppDrawer extends StatelessWidget {
                   onTap: () {
                     if (role == 'eleve') context.go('/eleve');
                     else if (role == 'parent') context.go('/parent');
-                    else if (role == 'enseignant') context.go('/enseignant');
                   },
                 ),
 
@@ -51,7 +54,6 @@ class AppDrawer extends StatelessWidget {
                 ),
 
                 if (role == 'eleve') ..._buildEleveItems(context),
-                if (role == 'enseignant') ..._buildEnseignantItems(context),
                 if (role == 'parent') ..._buildParentItems(context),
 
                 const Padding(
@@ -130,33 +132,16 @@ class AppDrawer extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white.withOpacity(0.5), width: 3),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10)),
-                  ],
-                ),
-                child: CircleAvatar(
-                  radius: 35,
-                  backgroundColor: Colors.white.withOpacity(0.2),
-                  child: ClipOval(
-                    child: photoUrl.isNotEmpty
-                        ? Image.network(
-                            photoUrl,
-                            width: 70,
-                            height: 70,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.person_rounded, size: 40, color: Colors.white),
-                          )
-                        : const Icon(Icons.person_rounded, size: 40, color: Colors.white),
-                  ),
-                ),
-              ),
+              _buildRobustAvatar(user, photoUrl, 35),
               const Spacer(),
-              Image.asset('assets/images/logo.png', height: 40, color: Colors.white.withOpacity(0.8)),
+              IconButton(
+                icon: const Icon(Icons.close_rounded, color: Colors.white, size: 28),
+                onPressed: () => Navigator.pop(context),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
             ],
           ),
           const SizedBox(height: 24),
@@ -198,10 +183,7 @@ class AppDrawer extends StatelessWidget {
     _buildDrawerItem(context, icon: Icons.calendar_month_rounded, label: 'Emploi du temps', onTap: () => context.push('/eleve/emploi')),
   ];
 
-  List<Widget> _buildEnseignantItems(BuildContext context) => [
-    _buildDrawerItem(context, icon: Icons.class_rounded, label: 'Mes Classes', onTap: () => context.go('/enseignant')),
-    _buildDrawerItem(context, icon: Icons.assignment_rounded, label: 'Évaluations', onTap: () => context.push('/enseignant/evaluations')),
-  ];
+
 
   List<Widget> _buildParentItems(BuildContext context) => [
     _buildDrawerItem(context, icon: Icons.family_restroom_rounded, label: 'Mes Enfants', onTap: () => context.go('/parent')),
@@ -285,7 +267,6 @@ class AppDrawer extends StatelessWidget {
   String _getRoleLabel(String role) {
     switch (role.toLowerCase()) {
       case 'eleve': return 'Portail Élève';
-      case 'enseignant': return 'Portail Enseignant';
       case 'parent': return 'Portail Parent';
       case 'administrateur': return 'Administration';
       default: return role;
@@ -295,10 +276,67 @@ class AppDrawer extends StatelessWidget {
   List<Color> _getRoleColors(String role) {
     switch (role.toLowerCase()) {
       case 'eleve': return [const Color(0xFF6366F1), const Color(0xFF8B5CF6)];
-      case 'enseignant': return [const Color(0xFFF59E0B), const Color(0xFFEF4444)];
       case 'parent': return [const Color(0xFF10B981), const Color(0xFF059669)];
       default: return [const Color(0xFF6366F1), const Color(0xFF6366F1)];
     }
   }
+
+  Widget _buildRobustAvatar(dynamic user, String? photoData, double radius) {
+    final String initialString = user?['initials']?.toString() ?? user?['name']?[0]?.toUpperCase() ?? '?';
+    final initials = initialString.trim().isNotEmpty ? initialString : '?';
+
+    Widget imageWidget;
+    
+    if (photoData != null && photoData.isNotEmpty) {
+      if (photoData.startsWith('data:image') || photoData.length > 500) {
+        try {
+          final String base64Str = photoData.contains(',') ? photoData.split(',')[1] : photoData;
+          final bytes = dart_convert.base64Decode(base64Str.replaceAll(RegExp(r'\s+'), ''));
+          imageWidget = Image.memory(bytes, width: radius * 2, height: radius * 2, fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => _buildFallbackAvatar(initials),
+          );
+        } catch (e) {
+          imageWidget = _buildFallbackAvatar(initials);
+        }
+      } else if (photoData.startsWith('http')) {
+        imageWidget = Image.network(
+          photoData,
+          width: radius * 2,
+          height: radius * 2,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _buildFallbackAvatar(initials),
+        );
+      } else {
+        imageWidget = _buildFallbackAvatar(initials);
+      }
+    } else {
+      imageWidget = _buildFallbackAvatar(initials);
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white.withOpacity(0.5), width: 3),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10)),
+        ],
+      ),
+      child: CircleAvatar(
+        radius: radius,
+        backgroundColor: Colors.white.withOpacity(0.2),
+        child: ClipOval(child: imageWidget),
+      ),
+    );
+  }
+
+  Widget _buildFallbackAvatar(String initials) {
+    return Center(
+      child: Text(
+        initials,
+        style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
 }
+
 

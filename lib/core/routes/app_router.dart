@@ -9,12 +9,7 @@ import 'package:gestparc/features/eleve/screens/bulletin_detail_screen.dart';
 import 'package:gestparc/features/eleve/screens/emploi_screen.dart';
 import 'package:gestparc/features/parent/screens/parent_dashboard_screen.dart';
 import 'package:gestparc/features/parent/screens/enfant_detail_screen.dart';
-import 'package:gestparc/features/enseignant/screens/enseignant_dashboard_screen.dart';
-import 'package:gestparc/features/enseignant/screens/classe_detail_screen.dart';
-import 'package:gestparc/features/enseignant/screens/saisie_notes_screen.dart';
-import 'package:gestparc/features/enseignant/screens/appel_screen.dart';
-import 'package:gestparc/features/enseignant/screens/programmer_evaluation_screen.dart';
-import 'package:gestparc/features/enseignant/screens/evaluations_screen.dart';
+
 import 'package:gestparc/features/notifications/screens/notification_screen.dart';
 import 'package:gestparc/shared/screens/profile_screen.dart';
 import 'package:gestparc/shared/screens/settings_screen.dart';
@@ -42,8 +37,6 @@ class AppRouter {
           return '/eleve';
         } else if (authProvider.role == 'parent') {
           return '/parent';
-        } else if (authProvider.role == 'enseignant') {
-          return '/enseignant';
         }
         return '/eleve';
       }
@@ -110,43 +103,56 @@ class AppRouter {
                 path: 'enfant/:id',
                 name: 'enfant_detail',
                 builder: (context, state) => const EnfantDetailScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'notes',
+                    name: 'parent_enfant_notes',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return NotesScreen(childId: id);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'absences',
+                    name: 'parent_enfant_absences',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return AbsencesScreen(childId: id);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'bulletins',
+                    name: 'parent_enfant_bulletins',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return BulletinsScreen(childId: id);
+                    },
+                    routes: [
+                      GoRoute(
+                        path: ':bulletinId',
+                        name: 'parent_enfant_bulletin_detail',
+                        builder: (context, state) {
+                          final id = int.parse(state.pathParameters['id']!);
+                          final bulletinId = int.parse(state.pathParameters['bulletinId']!);
+                          return BulletinDetailScreen(bulletinId: bulletinId, childId: id);
+                        },
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'emploi',
+                    name: 'parent_enfant_emploi',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return EmploiScreen(childId: id);
+                    },
+                  ),
+                ],
               ),
             ],
           ),
 
-          // Enseignant Routes
-          GoRoute(
-            path: '/enseignant',
-            name: 'enseignant_dashboard',
-            builder: (context, state) => const EnseignantDashboardScreen(),
-            routes: [
-              GoRoute(
-                path: 'classe/:id',
-                name: 'classe_detail',
-                builder: (context, state) => const ClasseDetailScreen(),
-              ),
-              GoRoute(
-                path: 'notes/:classeId',
-                name: 'saisie_notes',
-                builder: (context, state) => const SaisieNotesScreen(),
-              ),
-              GoRoute(
-                path: 'appel/:classeId',
-                name: 'faire_appel',
-                builder: (context, state) => const AppelScreen(),
-              ),
-              GoRoute(
-                path: 'evaluations/new',
-                name: 'programmer_evaluation',
-                builder: (context, state) => const ProgrammerEvaluationScreen(),
-              ),
-              GoRoute(
-                path: 'evaluations',
-                name: 'liste_evaluations',
-                builder: (context, state) => const EvaluationsScreen(),
-              ),
-            ],
-          ),
+
 
           // Shared Shell Routes
           GoRoute(

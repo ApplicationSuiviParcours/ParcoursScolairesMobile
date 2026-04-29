@@ -36,13 +36,20 @@ class EleveProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadNotes() async {
+  Future<void> loadNotes({int? childId}) async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
-      final data = await _eleveService.getNotes();
-      _notes = data['notes'] ?? [];
+      final data = await _eleveService.getNotes(childId: childId);
+      if (data is List) {
+        _notes = data;
+      } else if (data is Map) {
+        _notes = data['notes'] ?? data['data'] ?? [];
+      } else {
+        _notes = [];
+      }
       _isLoading = false;
     } catch (e) {
       _error = e.toString();
@@ -51,13 +58,20 @@ class EleveProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadAbsences() async {
+  Future<void> loadAbsences({int? childId}) async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
-      final data = await _eleveService.getAbsences();
-      _absences = data['absences'] ?? [];
+      final data = await _eleveService.getAbsences(childId: childId);
+      if (data is List) {
+        _absences = data;
+      } else if (data is Map) {
+        _absences = data['absences'] ?? data['data'] ?? [];
+      } else {
+        _absences = [];
+      }
       _isLoading = false;
     } catch (e) {
       _error = e.toString();
@@ -66,13 +80,20 @@ class EleveProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadBulletins() async {
+  Future<void> loadBulletins({int? childId}) async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
-      final data = await _eleveService.getBulletins();
-      _bulletins = data['bulletins'] ?? [];
+      final data = await _eleveService.getBulletins(childId: childId);
+      if (data is List) {
+        _bulletins = data;
+      } else if (data is Map) {
+        _bulletins = data['bulletins'] ?? data['data'] ?? [];
+      } else {
+        _bulletins = [];
+      }
       _isLoading = false;
     } catch (e) {
       _error = e.toString();
@@ -81,13 +102,24 @@ class EleveProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadEmploi() async {
+  Future<void> loadEmploi({int? childId}) async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
-      final data = await _eleveService.dioClient.dio.get('/eleve/emploi-du-temps');
-      _dashboardData = {...?_dashboardData, 'emploi': data.data['emploi']};
+      final endpoint = childId != null ? 'parent/eleve/$childId/emploi-du-temps' : 'eleve/emploi-du-temps';
+      final response = await _eleveService.dioClient.dio.get(endpoint);
+      final data = response.data;
+      
+      List<dynamic> emploiList = [];
+      if (data is List) {
+        emploiList = data;
+      } else if (data is Map) {
+        emploiList = data['emploi'] ?? data['data'] ?? [];
+      }
+      
+      _dashboardData = {...?_dashboardData, 'emploi': emploiList};
       _isLoading = false;
     } catch (e) {
       _error = e.toString();
@@ -105,7 +137,7 @@ class EleveProvider extends ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> getBulletinDetail(int id) async {
-    return await _eleveService.getBulletinDetail(id);
+  Future<Map<String, dynamic>> getBulletinDetail(int id, {int? childId}) async {
+    return await _eleveService.getBulletinDetail(id, childId: childId);
   }
 }
