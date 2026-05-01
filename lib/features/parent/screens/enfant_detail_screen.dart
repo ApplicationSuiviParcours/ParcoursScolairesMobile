@@ -362,10 +362,18 @@ class _EnfantDetailScreenState extends State<EnfantDetailScreen> {
         ),
         _buildModuleCard(
           context, 
+          'Moyenne Classe', 
+          '${stats?['moyenne_classe'] ?? 'N/A'}', 
+          Icons.analytics_rounded, 
+          const Color(0xFF10B981),
+          '' // Pas de route spécifique pour l'instant
+        ),
+        _buildModuleCard(
+          context, 
           'Emploi du Temps', 
           'Consulter', 
           Icons.calendar_today_rounded, 
-          const Color(0xFF10B981),
+          const Color(0xFF0EA5E9),
           '/parent/enfant/$enfantId/emploi'
         ),
       ],

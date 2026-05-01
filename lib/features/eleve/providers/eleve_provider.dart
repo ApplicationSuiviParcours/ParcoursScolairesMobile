@@ -36,19 +36,26 @@ class EleveProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Map<String, dynamic>? _noteStats;
+  Map<String, dynamic>? get noteStats => _noteStats;
+
   Future<void> loadNotes({int? childId}) async {
     _isLoading = true;
     _error = null;
+    _noteStats = null;
     notifyListeners();
 
     try {
       final data = await _eleveService.getNotes(childId: childId);
       if (data is List) {
         _notes = data;
+        _noteStats = null;
       } else if (data is Map) {
         _notes = data['notes'] ?? data['data'] ?? [];
+        _noteStats = data['stats'];
       } else {
         _notes = [];
+        _noteStats = null;
       }
       _isLoading = false;
     } catch (e) {

@@ -46,24 +46,22 @@ class _NotesScreenState extends State<NotesScreen> {
   Widget build(BuildContext context) {
     final eleveProvider = context.watch<EleveProvider>();
     final notes = eleveProvider.notes;
+    final stats = eleveProvider.noteStats;
     final theme = Theme.of(context);
 
-    double totalNotes = 0;
-    double maxNote = 0;
-    double minNote = 20;
-    int aSurveiller = 0;
+    // Use stats from API if available, otherwise fallback to local calculation
+    double moyenne = stats?['moyenne_generale'] != null 
+        ? (stats!['moyenne_generale'] as num).toDouble() 
+        : (notes.isEmpty ? 0 : notes.map((n) => (n['note'] as num).toDouble()).reduce((a, b) => a + b) / notes.length);
+    
+    double? moyenneClasse = stats?['moyenne_classe'] != null 
+        ? (stats!['moyenne_classe'] as num).toDouble() 
+        : null;
 
-    for (var n in notes) {
-      if (n == null || n['note'] == null) continue;
-      double val = (n['note'] is num) ? (n['note'] as num).toDouble() : double.tryParse(n['note'].toString()) ?? 0.0;
-      totalNotes += val;
-      if (val > maxNote) maxNote = val;
-      if (val < minNote) minNote = val;
-      if (val < 10) aSurveiller++;
-    }
+    double maxNote = notes.isEmpty ? 0 : notes.map((n) => (n['note'] as num).toDouble()).reduce((a, b) => a > b ? a : b);
+    double minNote = notes.isEmpty ? 0 : notes.map((n) => (n['note'] as num).toDouble()).reduce((a, b) => a < b ? a : b);
+    int aSurveiller = notes.where((n) => (n['note'] as num).toDouble() < 10).length;
 
-    double moyenne = notes.isEmpty ? 0 : totalNotes / notes.length;
-    if (minNote == 20 && notes.isEmpty) minNote = 0;
     double percentage = notes.isEmpty ? 0 : (moyenne / 20) * 100;
 
     final isDark = theme.brightness == Brightness.dark;
@@ -112,7 +110,7 @@ class _NotesScreenState extends State<NotesScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildOverviewCard(moyenne, percentage),
+                            _buildOverviewCard(moyenne, percentage, moyenneClasse),
                             const SizedBox(height: 20),
                             Row(
                               children: [
@@ -185,7 +183,7 @@ class _NotesScreenState extends State<NotesScreen> {
     );
   }
 
-  Widget _buildOverviewCard(double moyenne, double percentage) {
+  Widget _buildOverviewCard(double moyenne, double percentage, double? moyenneClasse) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -203,60 +201,68 @@ class _NotesScreenState extends State<NotesScreen> {
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Moyenne générale', style: GoogleFonts.inter(color: Colors.white.withOpacity(0.9), fontSize: 13, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 8),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text(moyenne.toStringAsFixed(2), style: GoogleFonts.poppins(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
-                  Text(' / 20', style: GoogleFonts.inter(color: Colors.white.withOpacity(0.8), fontSize: 16, fontWeight: FontWeight.w600)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.trending_up, color: Color(0xFF10B981), size: 14),
-                    const SizedBox(width: 4),
-                    Text('+1.25 par rapport au mois dernier', style: GoogleFonts.inter(color: const Color(0xFF6366F1), fontSize: 9, fontWeight: FontWeight.w700)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 90,
-                height: 90,
-                child: CircularProgressIndicator(
-                  value: percentage / 100,
-                  strokeWidth: 8,
-                  backgroundColor: Colors.white.withOpacity(0.2),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                  strokeCap: StrokeCap.round,
-                ),
-              ),
               Column(
-                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${percentage.toInt()}%', style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text('Réussite', style: GoogleFonts.inter(color: Colors.white.withOpacity(0.9), fontSize: 9, fontWeight: FontWeight.w500)),
+                  Text('Moyenne générale', style: GoogleFonts.inter(color: Colors.white.withOpacity(0.9), fontSize: 13, fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(moyenne.toStringAsFixed(2), style: GoogleFonts.poppins(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
+                      Text(' / 20', style: GoogleFonts.inter(color: Colors.white.withOpacity(0.8), fontSize: 16, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ],
+              ),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 70,
+                    height: 70,
+                    child: CircularProgressIndicator(
+                      value: percentage / 100,
+                      strokeWidth: 6,
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                      strokeCap: StrokeCap.round,
+                    ),
+                  ),
+                  Text('${percentage.toInt()}%', style: GoogleFonts.poppins(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
                 ],
               ),
             ],
           ),
+          if (moyenneClasse != null) ...[
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.analytics_rounded, color: Colors.white, size: 18),
+                      const SizedBox(width: 8),
+                      Text('Moyenne de la classe', style: GoogleFonts.inter(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                  Text('${moyenneClasse.toStringAsFixed(2)} / 20', style: GoogleFonts.poppins(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800)),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
