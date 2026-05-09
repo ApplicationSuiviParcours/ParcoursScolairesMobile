@@ -11,6 +11,7 @@ class EleveProvider extends ChangeNotifier {
   List<dynamic> _notes = [];
   List<dynamic> _absences = [];
   List<dynamic> _bulletins = [];
+  List<dynamic> _parcours = [];
   String? _error;
 
   bool get isLoading => _isLoading;
@@ -18,6 +19,7 @@ class EleveProvider extends ChangeNotifier {
   List<dynamic> get notes => _notes;
   List<dynamic> get absences => _absences;
   List<dynamic> get bulletins => _bulletins;
+  List<dynamic> get parcours => _parcours;
   String? get error => _error;
 
   Future<void> loadDashboard() async {
@@ -39,14 +41,14 @@ class EleveProvider extends ChangeNotifier {
   Map<String, dynamic>? _noteStats;
   Map<String, dynamic>? get noteStats => _noteStats;
 
-  Future<void> loadNotes({int? childId}) async {
+  Future<void> loadNotes({int? childId, int? anneeScolaireId}) async {
     _isLoading = true;
     _error = null;
     _noteStats = null;
     notifyListeners();
 
     try {
-      final data = await _eleveService.getNotes(childId: childId);
+      final data = await _eleveService.getNotes(childId: childId, anneeScolaireId: anneeScolaireId);
       if (data is List) {
         _notes = data;
         _noteStats = null;
@@ -65,13 +67,13 @@ class EleveProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadAbsences({int? childId}) async {
+  Future<void> loadAbsences({int? childId, int? anneeScolaireId}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final data = await _eleveService.getAbsences(childId: childId);
+      final data = await _eleveService.getAbsences(childId: childId, anneeScolaireId: anneeScolaireId);
       if (data is List) {
         _absences = data;
       } else if (data is Map) {
@@ -87,19 +89,45 @@ class EleveProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadBulletins({int? childId}) async {
+  Future<void> loadBulletins({int? childId, int? anneeScolaireId}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final data = await _eleveService.getBulletins(childId: childId);
+      final data = await _eleveService.getBulletins(childId: childId, anneeScolaireId: anneeScolaireId);
       if (data is List) {
         _bulletins = data;
       } else if (data is Map) {
         _bulletins = data['bulletins'] ?? data['data'] ?? [];
       } else {
         _bulletins = [];
+      }
+      _isLoading = false;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+    }
+    notifyListeners();
+  }
+
+  Future<void> loadParcours({int? childId}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final data = await _eleveService.getParcours(childId: childId);
+      if (data is Map) {
+        _parcours = data['historique'] ?? [];
+        // On peut aussi stocker les stats du parcours dans le dashboardData ou un autre état
+        _dashboardData = {
+          ...?_dashboardData,
+          'statsParcours': data['statsParcours'],
+          'eleveParcours': data['eleve']
+        };
+      } else {
+        _parcours = [];
       }
       _isLoading = false;
     } catch (e) {

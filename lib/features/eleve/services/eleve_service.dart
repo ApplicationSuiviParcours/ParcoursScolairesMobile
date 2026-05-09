@@ -14,33 +14,58 @@ class EleveService {
     }
   }
 
-  Future<dynamic> getNotes({int? childId}) async {
+  Future<dynamic> getNotes({int? childId, int? anneeScolaireId}) async {
     try {
       final endpoint = childId != null ? 'parent/eleve/$childId/notes' : 'eleve/notes';
-      final response = await dioClient.dio.get(endpoint);
+      final response = await dioClient.dio.get(
+        endpoint,
+        queryParameters: {
+          if (anneeScolaireId != null) 'annee_scolaire_id': anneeScolaireId,
+        },
+      );
       return response.data;
     } catch (e) {
       throw Exception('Erreur notes: $e');
     }
   }
 
-  Future<dynamic> getAbsences({int? childId}) async {
+  Future<dynamic> getAbsences({int? childId, int? anneeScolaireId}) async {
     try {
       final endpoint = childId != null ? 'parent/eleve/$childId/absences' : 'eleve/absences';
-      final response = await dioClient.dio.get(endpoint);
+      final response = await dioClient.dio.get(
+        endpoint,
+        queryParameters: {
+          if (anneeScolaireId != null) 'annee_scolaire_id': anneeScolaireId,
+        },
+      );
       return response.data;
     } catch (e) {
       throw Exception('Erreur absences: $e');
     }
   }
 
-  Future<dynamic> getBulletins({int? childId}) async {
+  Future<dynamic> getBulletins({int? childId, int? anneeScolaireId}) async {
     try {
       final endpoint = childId != null ? 'parent/eleve/$childId/bulletins' : 'eleve/bulletins';
-      final response = await dioClient.dio.get(endpoint);
+      final response = await dioClient.dio.get(
+        endpoint,
+        queryParameters: {
+          if (anneeScolaireId != null) 'annee_scolaire_id': anneeScolaireId,
+        },
+      );
       return response.data;
     } catch (e) {
       throw Exception('Erreur bulletins: $e');
+    }
+  }
+
+  Future<dynamic> getParcours({int? childId}) async {
+    try {
+      final endpoint = childId != null ? 'parent/eleve/$childId/parcours' : 'eleve/parcours';
+      final response = await dioClient.dio.get(endpoint);
+      return response.data;
+    } catch (e) {
+      throw Exception('Erreur parcours: $e');
     }
   }
 

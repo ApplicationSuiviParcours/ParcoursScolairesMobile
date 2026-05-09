@@ -370,6 +370,14 @@ class _EnfantDetailScreenState extends State<EnfantDetailScreen> {
         ),
         _buildModuleCard(
           context, 
+          'Parcours Enfant', 
+          'Historique', 
+          Icons.history_edu_rounded, 
+          const Color(0xFF8B5CF6),
+          '/parent/enfant/$enfantId/parcours'
+        ),
+        _buildModuleCard(
+          context, 
           'Emploi du Temps', 
           'Consulter', 
           Icons.calendar_today_rounded, 

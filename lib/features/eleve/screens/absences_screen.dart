@@ -5,7 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AbsencesScreen extends StatefulWidget {
   final int? childId;
-  const AbsencesScreen({super.key, this.childId});
+  final int? anneeScolaireId;
+  const AbsencesScreen({super.key, this.childId, this.anneeScolaireId});
 
   @override
   State<AbsencesScreen> createState() => _AbsencesScreenState();
@@ -17,7 +18,10 @@ class _AbsencesScreenState extends State<AbsencesScreen> {
     super.initState();
     Future.microtask(() {
       if (!mounted) return;
-      context.read<EleveProvider>().loadAbsences(childId: widget.childId);
+      context.read<EleveProvider>().loadAbsences(
+        childId: widget.childId,
+        anneeScolaireId: widget.anneeScolaireId
+      );
     });
   }
 

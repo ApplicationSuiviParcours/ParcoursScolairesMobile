@@ -7,6 +7,7 @@ import 'package:gestparc/features/eleve/screens/absences_screen.dart';
 import 'package:gestparc/features/eleve/screens/bulletins_screen.dart';
 import 'package:gestparc/features/eleve/screens/bulletin_detail_screen.dart';
 import 'package:gestparc/features/eleve/screens/emploi_screen.dart';
+import 'package:gestparc/features/eleve/screens/parcours_screen.dart';
 import 'package:gestparc/features/parent/screens/parent_dashboard_screen.dart';
 import 'package:gestparc/features/parent/screens/enfant_detail_screen.dart';
 
@@ -61,19 +62,36 @@ class AppRouter {
             builder: (context, state) => const EleveDashboardScreen(),
             routes: [
               GoRoute(
+                path: 'parcours',
+                name: 'eleve_parcours',
+                builder: (context, state) => const ParcoursScreen(),
+              ),
+              GoRoute(
                 path: 'notes',
                 name: 'eleve_notes',
-                builder: (context, state) => const NotesScreen(),
+                builder: (context, state) {
+                  final queryParam = state.uri.queryParameters['annee_scolaire_id'];
+                  final anneeId = queryParam != null ? int.tryParse(queryParam) : null;
+                  return NotesScreen(anneeScolaireId: anneeId);
+                },
               ),
               GoRoute(
                 path: 'absences',
                 name: 'eleve_absences',
-                builder: (context, state) => const AbsencesScreen(),
+                builder: (context, state) {
+                  final queryParam = state.uri.queryParameters['annee_scolaire_id'];
+                  final anneeId = queryParam != null ? int.tryParse(queryParam) : null;
+                  return AbsencesScreen(anneeScolaireId: anneeId);
+                },
               ),
               GoRoute(
                 path: 'bulletins',
                 name: 'eleve_bulletins',
-                builder: (context, state) => const BulletinsScreen(),
+                builder: (context, state) {
+                  final queryParam = state.uri.queryParameters['annee_scolaire_id'];
+                  final anneeId = queryParam != null ? int.tryParse(queryParam) : null;
+                  return BulletinsScreen(anneeScolaireId: anneeId);
+                },
                 routes: [
                   GoRoute(
                     path: ':id',
@@ -105,11 +123,21 @@ class AppRouter {
                 builder: (context, state) => const EnfantDetailScreen(),
                 routes: [
                   GoRoute(
+                    path: 'parcours',
+                    name: 'parent_enfant_parcours',
+                    builder: (context, state) {
+                      final id = int.parse(state.pathParameters['id']!);
+                      return ParcoursScreen(childId: id);
+                    },
+                  ),
+                  GoRoute(
                     path: 'notes',
                     name: 'parent_enfant_notes',
                     builder: (context, state) {
                       final id = int.parse(state.pathParameters['id']!);
-                      return NotesScreen(childId: id);
+                      final queryParam = state.uri.queryParameters['annee_scolaire_id'];
+                      final anneeId = queryParam != null ? int.tryParse(queryParam) : null;
+                      return NotesScreen(childId: id, anneeScolaireId: anneeId);
                     },
                   ),
                   GoRoute(
@@ -117,7 +145,9 @@ class AppRouter {
                     name: 'parent_enfant_absences',
                     builder: (context, state) {
                       final id = int.parse(state.pathParameters['id']!);
-                      return AbsencesScreen(childId: id);
+                      final queryParam = state.uri.queryParameters['annee_scolaire_id'];
+                      final anneeId = queryParam != null ? int.tryParse(queryParam) : null;
+                      return AbsencesScreen(childId: id, anneeScolaireId: anneeId);
                     },
                   ),
                   GoRoute(
@@ -125,7 +155,9 @@ class AppRouter {
                     name: 'parent_enfant_bulletins',
                     builder: (context, state) {
                       final id = int.parse(state.pathParameters['id']!);
-                      return BulletinsScreen(childId: id);
+                      final queryParam = state.uri.queryParameters['annee_scolaire_id'];
+                      final anneeId = queryParam != null ? int.tryParse(queryParam) : null;
+                      return BulletinsScreen(childId: id, anneeScolaireId: anneeId);
                     },
                     routes: [
                       GoRoute(

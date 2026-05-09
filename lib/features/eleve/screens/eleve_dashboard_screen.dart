@@ -454,6 +454,7 @@ class _EleveDashboardScreenState extends State<EleveDashboardScreen> {
         _buildModuleCard(context, 'Mes Notes', Icons.assignment_rounded, const Color(0xFF6366F1), '/eleve/notes'),
         _buildModuleCard(context, 'Mes Absences', Icons.event_busy_rounded, const Color(0xFFF43F5E), '/eleve/absences'),
         _buildModuleCard(context, 'Mes Bulletins', Icons.folder_shared_rounded, const Color(0xFFF59E0B), '/eleve/bulletins'),
+        _buildModuleCard(context, 'Mon Parcours', Icons.history_edu_rounded, const Color(0xFF8B5CF6), '/eleve/parcours'),
         _buildModuleCard(context, 'Emploi du Temps', Icons.calendar_today_rounded, const Color(0xFF10B981), '/eleve/emploi'),
       ],
     );

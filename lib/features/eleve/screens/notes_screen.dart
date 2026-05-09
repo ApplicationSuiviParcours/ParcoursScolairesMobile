@@ -5,7 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 class NotesScreen extends StatefulWidget {
   final int? childId;
-  const NotesScreen({super.key, this.childId});
+  final int? anneeScolaireId;
+  const NotesScreen({super.key, this.childId, this.anneeScolaireId});
 
   @override
   State<NotesScreen> createState() => _NotesScreenState();
@@ -17,7 +18,10 @@ class _NotesScreenState extends State<NotesScreen> {
     super.initState();
     Future.microtask(() {
       if (!mounted) return;
-      context.read<EleveProvider>().loadNotes(childId: widget.childId);
+      context.read<EleveProvider>().loadNotes(
+        childId: widget.childId,
+        anneeScolaireId: widget.anneeScolaireId
+      );
     });
   }
 
