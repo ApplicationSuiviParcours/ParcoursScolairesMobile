@@ -362,14 +362,6 @@ class _EnfantDetailScreenState extends State<EnfantDetailScreen> {
         ),
         _buildModuleCard(
           context, 
-          'Moyenne Classe', 
-          '${stats?['moyenne_classe'] ?? 'N/A'}', 
-          Icons.analytics_rounded, 
-          const Color(0xFF10B981),
-          '' // Pas de route spécifique pour l'instant
-        ),
-        _buildModuleCard(
-          context, 
           'Parcours Enfant', 
           'Historique', 
           Icons.history_edu_rounded, 
@@ -412,7 +404,7 @@ class _EnfantDetailScreenState extends State<EnfantDetailScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(28),
-          onTap: () => context.push(route),
+          onTap: route.isNotEmpty ? () => context.push(route) : null,
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(

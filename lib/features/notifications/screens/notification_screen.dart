@@ -39,11 +39,25 @@ class _NotificationScreenState extends State<NotificationScreen> {
         ),
         actions: [
           if (notifications.isNotEmpty)
-            TextButton(
-              onPressed: () {
-                // TODO: Mark all as read
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'read-all') {
+                  notificationProvider.markAllAsRead();
+                } else if (value == 'delete-read') {
+                  notificationProvider.deleteAllRead();
+                }
               },
-              child: const Text('Tout marquer lu', style: TextStyle(color: Color(0xFF4F46E5))),
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'read-all',
+                  child: Text('Tout marquer lu'),
+                ),
+                const PopupMenuItem(
+                  value: 'delete-read',
+                  child: Text('Supprimer les lues'),
+                ),
+              ],
+              icon: const Icon(Icons.more_vert, color: Colors.black87),
             ),
         ],
       ),
@@ -113,6 +127,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             style: const TextStyle(color: Colors.black38, fontSize: 12),
                           ),
                         ],
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete_outline, color: Colors.black38, size: 20),
+                        onPressed: () => notificationProvider.deleteNotification(notification['id']),
                       ),
                       onTap: () {
                         if (!isRead) {

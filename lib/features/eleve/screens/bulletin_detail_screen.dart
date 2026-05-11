@@ -62,7 +62,7 @@ class _BulletinDetailScreenState extends State<BulletinDetailScreen> {
       backgroundColor: bgColor,
       appBar: AppBar(
         title: Text(
-          _bulletin?['periode'] != null ? 'Détails - ${_bulletin!['periode']}' : 'Détails du Bulletin',
+          _bulletin?['periode'] != null ? 'Bulletin - ${_bulletin!['periode']}' : 'Détails du Bulletin',
           style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 18, color: textColor),
         ),
         elevation: 0,

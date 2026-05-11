@@ -44,6 +44,21 @@ class EleveService {
     }
   }
 
+  Future<dynamic> justifyAbsence(int absenceId, String motif, {int? childId}) async {
+    try {
+      final endpoint = childId != null 
+          ? 'parent/eleve/$childId/absences/$absenceId/justifier'
+          : 'eleve/absences/$absenceId/justifier';
+      final response = await dioClient.dio.post(
+        endpoint,
+        data: {'motif': motif},
+      );
+      return response.data;
+    } catch (e) {
+      throw Exception('Erreur lors de la justification: $e');
+    }
+  }
+
   Future<dynamic> getBulletins({int? childId, int? anneeScolaireId}) async {
     try {
       final endpoint = childId != null ? 'parent/eleve/$childId/bulletins' : 'eleve/bulletins';

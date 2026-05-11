@@ -21,4 +21,28 @@ class NotificationService {
       throw Exception('Erreur lors de la mise à jour de la notification');
     }
   }
+
+  Future<void> markAllAsRead() async {
+    try {
+      await dioClient.dio.post('notifications/read-all');
+    } catch (e) {
+      throw Exception('Erreur');
+    }
+  }
+
+  Future<void> deleteNotification(int id) async {
+    try {
+      await dioClient.dio.delete('notifications/$id');
+    } catch (e) {
+      throw Exception('Erreur');
+    }
+  }
+
+  Future<void> deleteAllRead() async {
+    try {
+      await dioClient.dio.delete('notifications');
+    } catch (e) {
+      throw Exception('Erreur');
+    }
+  }
 }

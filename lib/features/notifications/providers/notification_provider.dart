@@ -44,4 +44,30 @@ class NotificationProvider extends ChangeNotifier {
       // Ignorer l'erreur pour la fluidité UI
     }
   }
+
+  Future<void> markAllAsRead() async {
+    try {
+      await _notificationService.markAllAsRead();
+      for (var n in _notifications) {
+        n['read'] = true;
+      }
+      notifyListeners();
+    } catch (e) {}
+  }
+
+  Future<void> deleteNotification(int id) async {
+    try {
+      await _notificationService.deleteNotification(id);
+      _notifications.removeWhere((n) => n['id'] == id);
+      notifyListeners();
+    } catch (e) {}
+  }
+
+  Future<void> deleteAllRead() async {
+    try {
+      await _notificationService.deleteAllRead();
+      _notifications.removeWhere((n) => n['read'] == true);
+      notifyListeners();
+    } catch (e) {}
+  }
 }

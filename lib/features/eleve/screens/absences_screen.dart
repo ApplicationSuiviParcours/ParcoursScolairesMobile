@@ -283,8 +283,22 @@ class _AbsencesScreenState extends State<AbsencesScreen> {
     final color = isJustifiee ? const Color(0xFF10B981) : const Color(0xFFF59E0B);
     final icon = isJustifiee ? Icons.verified_rounded : Icons.warning_rounded;
     final badgeText = isJustifiee ? 'Justifiée' : 'En attente';
-    final dateStr = absence['date_absence'] ?? 'Date inconnue';
-    final timeStr = '23:00:00';
+    String dateStr = absence['date_absence'] ?? 'Date inconnue';
+    if (dateStr.contains('T')) {
+      dateStr = dateStr.split('T')[0];
+    }
+    
+    String timeStr = 'Non spécifié';
+    if (absence['heure_debut'] != null && absence['heure_fin'] != null) {
+      timeStr = '${absence['heure_debut']} - ${absence['heure_fin']}';
+    } else if (absence['heure_debut'] != null) {
+      timeStr = 'À partir de ${absence['heure_debut']}';
+    } else if (absence['date_absence'] != null && absence['date_absence'].toString().contains('T')) {
+      final parts = absence['date_absence'].toString().split('T');
+      if (parts.length > 1 && parts[1].length >= 5) {
+        timeStr = parts[1].substring(0, 5);
+      }
+    }
     
     final statusText = isJustifiee 
       ? 'Absence justifiée le $dateStr.' 
@@ -387,6 +401,21 @@ class _AbsencesScreenState extends State<AbsencesScreen> {
                     style: GoogleFonts.inter(color: color, fontSize: 11, fontWeight: FontWeight.w500),
                   ),
                 ),
+                if (!isJustifiee && widget.childId != null) ...[
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => _showJustifyDialog(context, absence['id']),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF59E0B),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                      minimumSize: const Size(0, 32),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: Text('Justifier', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600)),
+                  ),
+                ],
               ],
             ),
           ),
@@ -466,6 +495,58 @@ class _AbsencesScreenState extends State<AbsencesScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showJustifyDialog(BuildContext context, int absenceId) {
+    final motifController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Justifier l\'absence', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+          content: TextField(
+            controller: motifController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'Saisissez le motif...',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Annuler', style: GoogleFonts.inter(color: Colors.grey[600])),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (motifController.text.trim().isEmpty) return;
+                Navigator.pop(context);
+                try {
+                  await context.read<EleveProvider>().justifyAbsence(
+                    absenceId, 
+                    motifController.text.trim(), 
+                    childId: widget.childId
+                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Absence justifiée avec succès !'), backgroundColor: Colors.green),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Erreur lors de la justification'), backgroundColor: Colors.red),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white),
+              child: const Text('Valider'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

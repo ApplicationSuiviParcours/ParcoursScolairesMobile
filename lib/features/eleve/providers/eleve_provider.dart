@@ -89,6 +89,20 @@ class EleveProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> justifyAbsence(int absenceId, String motif, {int? childId}) async {
+    try {
+      await _eleveService.justifyAbsence(absenceId, motif, childId: childId);
+      final index = _absences.indexWhere((a) => a['id'] == absenceId);
+      if (index != -1) {
+        _absences[index]['justifiee'] = true;
+        _absences[index]['motif'] = motif;
+        notifyListeners();
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<void> loadBulletins({int? childId, int? anneeScolaireId}) async {
     _isLoading = true;
     _error = null;

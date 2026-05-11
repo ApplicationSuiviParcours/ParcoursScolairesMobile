@@ -132,7 +132,7 @@ class _ParcoursScreenState extends State<ParcoursScreen> {
                     if (eleve != null) ...[
                       const SizedBox(height: 4),
                       Text(
-                        '${eleve['prenom']} ${eleve['nom']}',
+                        eleve['nom_complet'] ?? '${eleve['prenom'] ?? ''} ${eleve['nom'] ?? ''}'.trim(),
                         style: GoogleFonts.inter(
                           color: Colors.white.withOpacity(0.9),
                           fontSize: 16,
@@ -153,7 +153,7 @@ class _ParcoursScreenState extends State<ParcoursScreen> {
   Widget _buildStatsGrid(dynamic stats, bool isDark) {
     return Row(
       children: [
-        _buildStatItem('Années', stats['total_annees']?.toString() ?? '0', Icons.calendar_today_rounded, const Color(0xFF6366F1), isDark),
+        _buildStatItem('Années', stats['nombre_annees']?.toString() ?? '0', Icons.calendar_today_rounded, const Color(0xFF6366F1), isDark),
         const SizedBox(width: 12),
         _buildStatItem('Moyenne', stats['moyenne_globale']?.toString() ?? '0.00', Icons.auto_graph_rounded, const Color(0xFF10B981), isDark),
         const SizedBox(width: 12),
