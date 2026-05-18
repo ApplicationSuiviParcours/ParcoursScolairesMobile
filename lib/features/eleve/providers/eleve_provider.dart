@@ -189,4 +189,14 @@ class EleveProvider extends ChangeNotifier {
   Future<Map<String, dynamic>> getBulletinDetail(int id, {int? childId}) async {
     return await _eleveService.getBulletinDetail(id, childId: childId);
   }
+
+  Future<List<int>?> downloadCertificate(int anneeId, {int? childId}) async {
+    try {
+      return await _eleveService.downloadCertificate(anneeId, childId: childId);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
 }

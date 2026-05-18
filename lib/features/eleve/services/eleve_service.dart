@@ -1,9 +1,25 @@
 import 'package:gestparc/core/network/dio_client.dart';
+import 'package:dio/dio.dart';
 
 class EleveService {
   final DioClient dioClient;
 
   EleveService(this.dioClient);
+
+  Future<List<int>> downloadCertificate(int anneeId, {int? childId}) async {
+    try {
+      final endpoint = childId != null
+          ? 'parent/eleve/$childId/parcours/$anneeId/certificat'
+          : 'eleve/parcours/$anneeId/certificat';
+      final response = await dioClient.dio.get<List<int>>(
+        endpoint,
+        options: Options(responseType: ResponseType.bytes),
+      );
+      return response.data ?? [];
+    } catch (e) {
+      throw Exception('Erreur de téléchargement du certificat: $e');
+    }
+  }
 
   Future<Map<String, dynamic>> getDashboardData() async {
     try {
