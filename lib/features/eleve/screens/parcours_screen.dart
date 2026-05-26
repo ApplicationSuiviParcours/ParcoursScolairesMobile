@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:open_file_plus/open_file_plus.dart';
+import 'package:open_filex/open_filex.dart';
 
 class ParcoursScreen extends StatefulWidget {
   final int? childId;
@@ -612,14 +612,14 @@ class _ParcoursScreenState extends State<ParcoursScreen> {
             label: 'OUVRIR',
             textColor: Colors.white,
             onPressed: () {
-              OpenFile.open(filePath);
+              OpenFilex.open(filePath);
             },
           ),
         ),
       );
 
       // Automatically try to open the file
-      await OpenFile.open(filePath);
+      await OpenFilex.open(filePath);
 
     } catch (e) {
       if (!context.mounted) return;

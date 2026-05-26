@@ -37,3 +37,14 @@ android {
 flutter {
     source = "../.."
 }
+
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "androidx.browser" && requested.name == "browser") {
+            useVersion("1.8.0")
+        }
+        if (requested.group == "androidx.core" && (requested.name == "core" || requested.name == "core-ktx")) {
+            useVersion("1.13.1")
+        }
+    }
+}
